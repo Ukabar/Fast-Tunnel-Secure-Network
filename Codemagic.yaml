@@ -1,6 +1,6 @@
 workflows:
   testFlight:
-    name: "Fast Tunnel iOS TestFlight"
+    name: "Fast-Tunnel-Secure-Network"
 
     integrations:
       app_store_connect: SpeedTeste
