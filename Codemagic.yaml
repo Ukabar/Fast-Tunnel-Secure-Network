@@ -1,16 +1,18 @@
 workflows:
   testFlight:
-    name: "Ping Teste Gaming - Speed"
+    name: "Fast Tunnel iOS TestFlight"
 
     integrations:
       app_store_connect: SpeedTeste
 
     environment:
       flutter: stable
+      xcode: latest
+      cocoapods: default
 
       ios_signing:
-        provisioning_profiles:
-          - ProvisioningTESTE
+        distribution_type: app_store
+        bundle_identifier: com.zyverio.fasttunnel
 
     scripts:
       - name: Clean Flutter build artifacts
@@ -23,9 +25,25 @@ workflows:
           set -e
           flutter pub get
 
-      - name: Set up code signing
+      - name: Verify formatting
         script: |
           set -e
+          dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze project
+        script: |
+          set -e
+          flutter analyze
+
+      - name: Run tests
+        script: |
+          set -e
+          flutter test
+
+      - name: Set up iOS code signing
+        script: |
+          set -e
+
           xcode-project use-profiles
 
           echo "Checking generated export options..."
@@ -37,7 +55,7 @@ workflows:
           echo "Installed provisioning profiles:"
           ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
 
-      - name: Verify iOS app icons have no alpha
+      - name: Verify iOS App Store icons
         script: |
           python3 - <<'PY'
           import pathlib
@@ -64,6 +82,10 @@ workflows:
 
               if data[:8] != b"\x89PNG\r\n\x1a\n":
                   failures.append(f"{path.name}: not a PNG file")
+                  return
+
+              if len(data) < 26:
+                  failures.append(f"{path.name}: invalid PNG structure")
                   return
 
               width, height, bit_depth, color_type = struct.unpack(
@@ -125,6 +147,10 @@ workflows:
           echo "Xcode version:"
           xcodebuild -version
 
+          echo "Bundle identifier:"
+          grep -n "PRODUCT_BUNDLE_IDENTIFIER" \
+            ios/Runner.xcodeproj/project.pbxproj || true
+
           echo "Starting signed IPA build..."
 
           flutter build ipa \
@@ -133,9 +159,6 @@ workflows:
             --export-options-plist=/Users/builder/export_options.plist
 
           echo "Build command completed."
-
-          echo "Contents of build/ios:"
-          find build/ios -maxdepth 5 -print || true
 
           IPA_PATH="$(
             find "$CM_BUILD_DIR/build/ios/ipa" \
@@ -147,12 +170,16 @@ workflows:
           )"
 
           if [ -z "$IPA_PATH" ]; then
-            echo "ERROR: flutter build ipa finished but no IPA was found."
-            echo "Searching the entire project for IPA files:"
+            echo "ERROR: No IPA was generated."
+
+            echo "Searching project for IPA files:"
             find "$CM_BUILD_DIR" -type f -name "*.ipa" -print || true
 
             echo "Searching for Xcode archives:"
-            find "$CM_BUILD_DIR" -type d -name "*.xcarchive" -print || true
+            find "$CM_BUILD_DIR" \
+              -type d \
+              -name "*.xcarchive" \
+              -print || true
 
             exit 1
           fi
@@ -161,7 +188,7 @@ workflows:
           echo "$IPA_PATH"
           ls -lh "$IPA_PATH"
 
-      - name: Verify packaged app
+      - name: Verify packaged Fast Tunnel app
         script: |
           set -euo pipefail
 
@@ -175,17 +202,19 @@ workflows:
           )"
 
           if [ -z "$IPA_PATH" ]; then
-            echo "ERROR: No IPA file found for verification."
+            echo "ERROR: No IPA found for verification."
             exit 1
           fi
 
-          rm -rf /tmp/ping_test_ipa
-          mkdir -p /tmp/ping_test_ipa
+          VERIFY_DIR="/tmp/fast_tunnel_ipa"
 
-          unzip -q "$IPA_PATH" -d /tmp/ping_test_ipa
+          rm -rf "$VERIFY_DIR"
+          mkdir -p "$VERIFY_DIR"
+
+          unzip -q "$IPA_PATH" -d "$VERIFY_DIR"
 
           APP_PATH="$(
-            find /tmp/ping_test_ipa/Payload \
+            find "$VERIFY_DIR/Payload" \
               -maxdepth 1 \
               -type d \
               -name "*.app" \
@@ -194,13 +223,35 @@ workflows:
           )"
 
           if [ -z "$APP_PATH" ]; then
-            echo "ERROR: No packaged .app was found inside the IPA."
-            find /tmp/ping_test_ipa -maxdepth 4 -print || true
+            echo "ERROR: No packaged .app found inside IPA."
+            find "$VERIFY_DIR" -maxdepth 4 -print || true
             exit 1
           fi
 
-          echo "Packaged application found:"
+          echo "Packaged application:"
           echo "$APP_PATH"
+
+          echo "Packaged bundle identifier:"
+          /usr/libexec/PlistBuddy \
+            -c "Print :CFBundleIdentifier" \
+            "$APP_PATH/Info.plist"
+
+          echo "Packaged display name:"
+          /usr/libexec/PlistBuddy \
+            -c "Print :CFBundleDisplayName" \
+            "$APP_PATH/Info.plist" || true
+
+          PACKAGED_BUNDLE_ID="$(
+            /usr/libexec/PlistBuddy \
+              -c "Print :CFBundleIdentifier" \
+              "$APP_PATH/Info.plist"
+          )"
+
+          if [ "$PACKAGED_BUNDLE_ID" != "com.zyverio.fasttunnel" ]; then
+            echo "ERROR: Unexpected bundle identifier:"
+            echo "$PACKAGED_BUNDLE_ID"
+            exit 1
+          fi
 
           if [ ! -f "$APP_PATH/Assets.car" ]; then
             echo "ERROR: Assets.car was not found."
@@ -209,14 +260,14 @@ workflows:
           fi
 
           assetutil --info "$APP_PATH/Assets.car" \
-            > /tmp/ping_test_ipa/assets-car-info.json
+            > "$VERIFY_DIR/assets-car-info.json"
 
-          echo "Packaged application and Assets.car verified."
+          echo "Packaged Fast Tunnel app verified."
 
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - /tmp/ping_test_ipa/assets-car-info.json
+      - /tmp/fast_tunnel_ipa/assets-car-info.json
 
     publishing:
       email:
@@ -228,3 +279,5 @@ workflows:
 
       app_store_connect:
         auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
