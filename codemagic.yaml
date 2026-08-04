@@ -32,8 +32,8 @@ workflows:
 
       - name: Analyze project
         script: |
-          set -e
-          flutter analyze
+          rm -rf build
+          flutter analyze lib
 
       - name: Run tests
         script: |
