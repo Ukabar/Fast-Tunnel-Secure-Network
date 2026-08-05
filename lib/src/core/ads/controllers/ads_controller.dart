@@ -40,13 +40,18 @@ class AdsState {
 
   bool get effectiveTestMode => kDebugMode || config.testMode;
 
-  bool get adsEnabled => config.anyAdsEnabled;
+  bool get supportsAdsPlatform =>
+      defaultTargetPlatform == TargetPlatform.android;
+
+  bool get adsEnabled => supportsAdsPlatform && config.anyAdsEnabled;
 
   String adUnitIdFor(AdFormat format) {
     return config.adUnitIdFor(format, effectiveTestMode: effectiveTestMode);
   }
 
-  bool isFormatEnabled(AdFormat format) => config.isFormatEnabled(format);
+  bool isFormatEnabled(AdFormat format) {
+    return supportsAdsPlatform && config.isFormatEnabled(format);
+  }
 
   bool isBannerEnabledFor(String screenId) {
     return isFormatEnabled(AdFormat.banner) &&

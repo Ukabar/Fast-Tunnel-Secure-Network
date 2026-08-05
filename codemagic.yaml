@@ -25,6 +25,33 @@ workflows:
           set -e
           flutter pub get
 
+      - name: Reset and install CocoaPods dependencies
+        script: |
+          set -euo pipefail
+
+          echo "Disabling Flutter Swift Package Manager..."
+          flutter config --no-enable-swift-package-manager
+
+          echo "Regenerating Flutter iOS configuration..."
+          flutter build ios --config-only --no-codesign
+
+          cd ios
+
+          echo "Removing stale CocoaPods state..."
+          rm -rf Pods
+          rm -rf .symlinks
+          rm -f Podfile.lock
+
+          echo "Installing CocoaPods dependencies..."
+          pod install --repo-update
+
+          echo "Verifying CocoaPods lock synchronization..."
+          test -f Podfile.lock
+          test -f Pods/Manifest.lock
+          diff Podfile.lock Pods/Manifest.lock
+
+          cd ..
+
       - name: Verify formatting
         script: |
           set -e

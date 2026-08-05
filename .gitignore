@@ -53,4 +53,6 @@ key.properties
 # Apple signing and local build products
 *.p12
 *.mobileprovision
+*.p8
 DerivedData/
+*.xcuserstate
