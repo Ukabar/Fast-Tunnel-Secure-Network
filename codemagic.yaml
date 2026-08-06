@@ -52,7 +52,7 @@ workflows:
 
           cd ..
 
-      - name: Verify formatting
+      - name: Format Dart files
         script: |
           set -e
           dart format --output=none --set-exit-if-changed .
