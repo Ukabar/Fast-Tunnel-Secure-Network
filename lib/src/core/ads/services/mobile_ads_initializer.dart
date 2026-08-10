@@ -12,7 +12,10 @@ class MobileAdsInitializer {
   Object? get lastError => _lastError;
 
   Future<bool> initialize() async {
-    if (defaultTargetPlatform != TargetPlatform.android) return false;
+    if (defaultTargetPlatform != TargetPlatform.android &&
+        defaultTargetPlatform != TargetPlatform.iOS) {
+      return false;
+    }
     try {
       _initialization ??= MobileAds.instance.initialize();
       await _initialization;

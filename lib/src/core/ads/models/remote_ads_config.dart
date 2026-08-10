@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import 'ad_format_config.dart';
 import '../utils/ad_id_validator.dart';
 import '../utils/ad_screen_ids.dart';
@@ -32,6 +34,15 @@ class AdMobConfig {
 
   String idFor(AdFormat format, {required bool effectiveTestMode}) {
     if (effectiveTestMode) {
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        return switch (format) {
+          AdFormat.appOpen => GoogleTestAdIds.iosAppOpen,
+          AdFormat.banner => GoogleTestAdIds.iosBanner,
+          AdFormat.interstitial => GoogleTestAdIds.iosInterstitial,
+          AdFormat.native => GoogleTestAdIds.iosNative,
+          AdFormat.rewarded => GoogleTestAdIds.iosRewarded,
+        };
+      }
       return switch (format) {
         AdFormat.appOpen => GoogleTestAdIds.androidAppOpen,
         AdFormat.banner => GoogleTestAdIds.androidBanner,

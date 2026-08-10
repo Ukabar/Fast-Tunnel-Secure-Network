@@ -41,7 +41,8 @@ class AdsState {
   bool get effectiveTestMode => kDebugMode || config.testMode;
 
   bool get supportsAdsPlatform =>
-      defaultTargetPlatform == TargetPlatform.android;
+      defaultTargetPlatform == TargetPlatform.android ||
+      defaultTargetPlatform == TargetPlatform.iOS;
 
   bool get adsEnabled => supportsAdsPlatform && config.anyAdsEnabled;
 
@@ -50,6 +51,10 @@ class AdsState {
   }
 
   bool isFormatEnabled(AdFormat format) {
+    if (defaultTargetPlatform == TargetPlatform.iOS &&
+        format == AdFormat.native) {
+      return false;
+    }
     return supportsAdsPlatform && config.isFormatEnabled(format);
   }
 
@@ -139,6 +144,15 @@ class AdsController extends AsyncNotifier<AdsState> {
 }
 
 String adUnitForTestFallback(AdFormat format) {
+  if (defaultTargetPlatform == TargetPlatform.iOS) {
+    return switch (format) {
+      AdFormat.appOpen => GoogleTestAdIds.iosAppOpen,
+      AdFormat.banner => GoogleTestAdIds.iosBanner,
+      AdFormat.interstitial => GoogleTestAdIds.iosInterstitial,
+      AdFormat.native => GoogleTestAdIds.iosNative,
+      AdFormat.rewarded => GoogleTestAdIds.iosRewarded,
+    };
+  }
   return switch (format) {
     AdFormat.appOpen => GoogleTestAdIds.androidAppOpen,
     AdFormat.banner => GoogleTestAdIds.androidBanner,

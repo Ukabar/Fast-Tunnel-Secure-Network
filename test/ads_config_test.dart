@@ -3,10 +3,15 @@ import 'dart:convert';
 import 'package:fast_tunnel_network_test/src/core/ads/models/remote_ads_config.dart';
 import 'package:fast_tunnel_network_test/src/core/ads/utils/ad_screen_ids.dart';
 import 'package:fast_tunnel_network_test/src/core/ads/utils/google_test_ad_ids.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('RemoteAdsConfig', () {
+    tearDown(() {
+      debugDefaultTargetPlatformOverride = null;
+    });
+
     test('parses valid JSON', () {
       final config = RemoteAdsConfig.fromJson(_validConfig());
 
@@ -113,6 +118,7 @@ void main() {
 
     test('test mode uses official Google test IDs', () {
       final config = RemoteAdsConfig.fromJson(_validConfig());
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
 
       expect(
         config.adUnitIdFor(AdFormat.banner, effectiveTestMode: true),
@@ -121,6 +127,20 @@ void main() {
       expect(
         config.adUnitIdFor(AdFormat.banner, effectiveTestMode: false),
         'ca-app-pub-1234567890123456/2222222222',
+      );
+    });
+
+    test('test mode uses official Google iOS test IDs on iOS', () {
+      final config = RemoteAdsConfig.fromJson(_validConfig());
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+
+      expect(
+        config.adUnitIdFor(AdFormat.banner, effectiveTestMode: true),
+        GoogleTestAdIds.iosBanner,
+      );
+      expect(
+        config.adUnitIdFor(AdFormat.interstitial, effectiveTestMode: true),
+        GoogleTestAdIds.iosInterstitial,
       );
     });
   });
