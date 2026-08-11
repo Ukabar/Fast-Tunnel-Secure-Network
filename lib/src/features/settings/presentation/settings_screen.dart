@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/ads/providers/ad_providers.dart';
 import '../../../core/ads/utils/ad_screen_ids.dart';
 import '../../../core/ads/widgets/adaptive_banner_ad_widget.dart';
-import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../history/application/history_providers.dart';
 import '../../locations/application/locations_providers.dart';
@@ -113,7 +111,6 @@ class SettingsScreen extends ConsumerWidget {
                   title: Text('Advertising'),
                   subtitle: Text('Ads help support continued development.'),
                 ),
-                if (kDebugMode) const _AdvertisingDebugCard(),
                 if (kDebugMode)
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -186,66 +183,6 @@ class SettingsScreen extends ConsumerWidget {
           loading: () => const Padding(
             padding: EdgeInsets.all(16),
             child: LoadingSkeleton(lines: 8),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _AdvertisingDebugCard extends ConsumerWidget {
-  const _AdvertisingDebugCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ads = ref
-        .watch(adsControllerProvider)
-        .maybeWhen(data: (value) => value, orElse: () => null);
-    final interstitial = ref
-        .watch(interstitialControllerProvider)
-        .maybeWhen(data: (value) => value, orElse: () => null);
-    final appOpen = ref
-        .watch(appOpenControllerProvider)
-        .maybeWhen(data: (value) => value, orElse: () => null);
-    final fullScreenActive = ref
-        .watch(fullScreenAdCoordinatorProvider)
-        .isActive;
-    final theme = Theme.of(context);
-    final enabledFormats = ads?.enabledFormatLabels.join(', ');
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: DefaultTextStyle(
-          style: theme.textTheme.bodySmall!,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Debug advertising state',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text('Config source: ${ads?.source ?? 'loading'}'),
-              Text(
-                'Last refresh: ${ads?.lastRefresh == null ? 'none' : formatTimestamp(ads!.lastRefresh!)}',
-              ),
-              Text('Ads enabled: ${ads?.adsEnabled ?? false}'),
-              Text('Effective test mode: ${ads?.effectiveTestMode ?? true}'),
-              Text('SDK initialized: ${ads?.sdkInitialized ?? false}'),
-              Text(
-                'Enabled formats: ${enabledFormats == null || enabledFormats.isEmpty ? 'none' : enabledFormats}',
-              ),
-              Text(
-                'Interstitial counter: ${interstitial?.completedSessionCounter ?? 0}',
-              ),
-              Text(
-                'Interstitial daily count: ${interstitial?.dailyCount ?? 0}',
-              ),
-              Text('App Open daily count: ${appOpen?.dailyCount ?? 0}'),
-              Text('Full-screen ad active: $fullScreenActive'),
-            ],
           ),
         ),
       ),
