@@ -19,9 +19,16 @@ class LegalScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              isPrivacy ? _privacyPolicy : _termsOfUse,
-              style: Theme.of(context).textTheme.bodyMedium,
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Text(
+                  isPrivacy ? _privacyPolicy : _termsOfUse,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(height: 1.55),
+                ),
+              ),
             ),
           ],
         ),
@@ -33,19 +40,21 @@ class LegalScreen extends StatelessWidget {
 enum LegalPageKind { privacy, terms }
 
 const _privacyPolicy = '''
-Fast Tunnel v1.0 is a private connection interface build.
+Fast Tunnel v1.0 is a network and internet testing utility.
 
-Current version does not provide an active VPN.
+Current version does not provide VPN functionality.
 
-Current version does not tunnel traffic.
+The app does not establish a system-level VPN connection.
 
-Current version does not encrypt traffic.
+The app does not route device traffic through a VPN, proxy, or traffic tunnel.
 
-Version 1.0 does not route internet traffic and does not inspect browsing content.
+Network tests are initiated by the user.
 
-The app may look up your current public IP to display it as informational status.
+The app may contact lightweight diagnostic endpoints to measure latency, DNS resolution, HTTPS reachability, and request failure rate.
 
-Session history, selected location, favorites, and settings are stored locally on your device.
+The app may look up your current public IP from a third-party endpoint to display it as an informational diagnostic value.
+
+Completed test history and settings are stored locally on your device.
 
 Google Mobile Ads may be used when advertising is enabled. Google may process device and advertising-related data to load, measure, and serve ads.
 
@@ -55,9 +64,9 @@ This placeholder policy requires legal review before publication.
 ''';
 
 const _termsOfUse = '''
-Fast Tunnel v1.0 provides a simulated connection interface for private testing.
+Fast Tunnel v1.0 provides user-triggered network diagnostics.
 
-The app does not guarantee availability, privacy, anonymity, encryption, or traffic routing.
+The app does not provide VPN functionality, anonymous browsing, traffic routing, or traffic protection.
 
-Future native connection functionality is planned but is not included in version 1.0.
+Diagnostic results are estimates based on HTTPS timing, DNS checks, reachability checks, and public IP lookup availability at the time of the test.
 ''';

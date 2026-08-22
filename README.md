@@ -1,40 +1,76 @@
 # Fast Tunnel
 
-Fast Tunnel v1.0 is a private Flutter interface prototype for selecting a location and managing a simulated connection session. Store metadata should be revised before any public release.
+Fast Tunnel v1.0 is a Flutter network and internet testing utility. The store-facing functional positioning is **Fast Tunnel: Network Test**.
 
-This build is **not a real VPN**. It does not route traffic, change DNS, change public IP, hide identity, encrypt device traffic, or install native VPN capabilities. The simulated service exists so the interface can be tested before native tunnel work begins.
+## Current Release
+
+- Network/Internet Test: Available
+- VPN: Coming Soon / not implemented
 
 ## What Version 1.0 Does
 
-- Shows a tunnel-focused Home screen.
-- Lets users select a preferred location.
-- Supports favorites and alphabetical location browsing.
-- Starts, cancels, retries, and ends simulated connection sessions.
-- Shows elapsed session time and a session identifier.
-- Looks up the current public IP as an informational value.
-- Stores local session history, capped at 100 records.
-- Stores theme, animation, selected location, and favorite preferences locally.
-- Supports Android-only Google Mobile Ads placements controlled by remote JSON.
-- Keeps About, Privacy Policy, Terms of Use, and optional future features pages.
+- Runs user-triggered network diagnostics.
+- Looks up the current public IP.
+- Measures HTTPS latency using lightweight repeated requests.
+- Calculates average latency, minimum latency, maximum latency, jitter, and request failure rate.
+- Checks DNS resolution and HTTPS reachability.
+- Calculates a transparent network score from real measured values.
+- Stores completed test history locally on the device, capped at 50 records.
+- Supports Google Mobile Ads with embedded in-app configuration.
 
 ## What Version 1.0 Does Not Do
 
-- It does not provide an active VPN or real tunnel.
-- It does not implement NetworkExtension, WireGuard, OpenVPN, proxy routing, packet tunneling, traffic interception, DNS modification, or IP changes.
-- It does not request VPN entitlements or add packet tunnel targets.
-- It does not claim protected traffic, encrypted traffic, anonymous browsing, hidden IP, or routed traffic.
-- It does not include StoreKit, Google Play Billing, subscriptions, purchase buttons, or prices.
-- It does not include AppLovin SDK, analytics SDKs, iOS ad setup, or unrelated tracking SDKs.
+- It does not provide VPN functionality.
+- It does not establish a system-level VPN connection.
+- It does not route device traffic through a VPN, proxy, or traffic tunnel.
+- It does not modify DNS settings.
+- It does not change the public IP.
+- It does not inspect, intercept, or collect user traffic through VPN functionality.
+- It does not request VPN entitlements, NetworkExtension capabilities, or packet tunnel targets.
+
+## App Review Clarification
+
+The current version of Fast Tunnel does not implement VPN functionality. It performs user-triggered network diagnostics only. It does not establish a system-level VPN connection, route traffic through a VPN, or collect user traffic through VPN functionality.
+
+## Network Test Methodology
+
+The score is calculated from real diagnostic values:
+
+- Latency: 45%
+- Jitter: 25%
+- Request failure rate: 20%
+- DNS and HTTPS reachability: 10%
+
+Latency is measured with lightweight HTTPS requests. Jitter is the average variation between successful latency samples. Failed requests contribute to request failure rate. DNS and HTTPS checks are direct reachability diagnostics.
+
+Default accuracy is `Accurate`, which performs 30 latency attempts. Available modes:
+
+- Fast: 10 attempts
+- Balanced: 20 attempts
+- Accurate: 30 attempts
+- Maximum: 40 attempts
+
+## Diagnostic Endpoints
+
+The app uses lightweight HTTPS endpoints for reachability and latency:
+
+- `https://www.google.com/generate_204`
+- `https://www.cloudflare.com/cdn-cgi/trace`
+- `https://cp.cloudflare.com/generate_204`
+
+Public IP lookup uses:
+
+- `https://api.ipify.org?format=json`
+
+No large files are downloaded for latency testing.
 
 ## Package Identifiers
 
-Current temporary local development identifiers:
-
 - Android applicationId: `com.fasttunnel.networktest`
-- iOS bundle identifier: `com.fasttunnel.networktest`
+- iOS bundle identifier: `com.zyverio.fasttunnel`
 - Flutter package name: `fast_tunnel_network_test`
 
-Before publication, replace these with final reverse-domain identifiers based on a domain you own. Bundle identifiers generally cannot be changed after an app is published.
+Bundle identifiers generally cannot be changed after an app is published.
 
 ## Architecture
 
@@ -43,42 +79,13 @@ The Flutter code is feature-first under `lib/src`.
 - `app`: GoRouter routes, app root, and theme.
 - `core/storage`: shared preferences provider.
 - `core/widgets`: shared action buttons, badges, empty/error states, and dialogs.
-- `features/tunnel`: `TunnelService`, simulated service implementation, Home shell, session details, and debug controls.
-- `features/public_ip`: independent current-public-IP service and provider.
-- `features/history`: local session history repository, controller, list, and record details.
-- `features/locations`: static location metadata and selector UI.
+- `core/ads`: AdMob configuration, services, controllers, and widgets.
+- `features/network_test`: network diagnostics service, result models, and controller.
+- `features/history`: local completed test history repository, controller, list, and result details.
 - `features/settings`: persisted settings repository and screen.
-- `features/premium`: non-purchasable future feature concepts.
-- `features/legal`: About, Privacy Policy, and Terms of Use.
-- `core/ads`: Android-only AdMob configuration, cache, services, controllers, and widgets.
-
-Every tunnel-facing UI consumes `TunnelService`. A future native implementation should replace only the service implementation behind the provider.
-
-## Simulated Flow
-
-Connect:
-
-```text
-Not Connected -> Preparing -> Connecting -> Session Active
-```
-
-Disconnect:
-
-```text
-Session Active -> Disconnecting -> Not Connected
-```
-
-The debug screen is available from Settings in debug builds and controls simulated failure, random failures, delay sliders, and reset state. These controls affect only simulated state.
-
-## Public IP
-
-The app can display `Current Public IP` using:
-
-```text
-https://api.ipify.org?format=json
-```
-
-This is informational only. The app never displays a replacement IP and never claims that the public IP changed.
+- `features/public_ip`: reusable public IP parsing support.
+- `features/legal`: About, Methodology, Privacy Policy, and Terms of Use.
+- `features/tunnel`: future-only tunnel abstractions retained for later native work, not used by the current production navigation.
 
 ## Windows Setup
 
@@ -114,7 +121,7 @@ flutter devices
 flutter run -d <device-id>
 ```
 
-Run the full local quality gate:
+Run the local quality gate:
 
 ```powershell
 dart format .
@@ -122,7 +129,6 @@ flutter pub get
 flutter analyze
 flutter test
 flutter build apk --debug
-flutter build apk --release
 ```
 
 The debug APK is generated at:
@@ -131,82 +137,46 @@ The debug APK is generated at:
 build\app\outputs\flutter-apk\app-debug.apk
 ```
 
-The Android app keeps only the `android.permission.INTERNET` permission for the current public IP lookup.
+## Advertising
 
-## Android Advertising
+Fast Tunnel uses `google_mobile_ads` version `^9.0.0`.
 
-Fast Tunnel uses `google_mobile_ads` version `^9.0.0` on Android only.
+iOS ads are enabled directly inside the app through embedded AdMob configuration:
 
-Remote configuration is loaded from the raw JSON endpoint:
+- App Open: `ca-app-pub-7416708332505708/6203802459`
+- Banner: `ca-app-pub-7416708332505708/7648746066`
+- Interstitial: `ca-app-pub-7416708332505708/4511446833`
 
-```text
-https://raw.githubusercontent.com/Ukabar/Ads_config_Tunnel/main/ads_config.json
-```
+Native and rewarded ads are configured but disabled in version 1.0.
 
-An optional build-time override is supported:
+Android currently uses official Google test ads because Android production AdMob IDs have not been provided. Do not publish Android with test ad identifiers.
 
-```powershell
-flutter run --dart-define=ADS_CONFIG_URL=https://example.com/ads_config.json
-```
-
-Only HTTPS endpoints are accepted. The app loads the last valid cached config immediately, refreshes the remote config in the background, caches only successfully validated JSON, respects `cache_duration_minutes`, and disables ads after seven days without a valid refresh.
-
-The Android AdMob App ID is configured in:
-
-```text
-android/app/src/main/AndroidManifest.xml
-```
-
-The current value is a placeholder:
-
-```xml
-android:value="REPLACE_WITH_REAL_ANDROID_ADMOB_APP_ID"
-```
-
-Replace it with the real Android AdMob App ID before publication. App IDs contain `~`; ad unit IDs contain `/`. Do not put an ad unit ID in the manifest.
-
-Debug builds always use official Google Android test ad unit IDs. Release builds use test IDs when remote `test_mode=true`; production ad units are used only in release when `test_mode=false`. Never click live ads during development or testing.
-
-Current placements:
-
-- Banner: Locations, History, and Settings only, using anchored adaptive banners.
-- Interstitial: only after successfully completed simulated sessions, with remote frequency, interval, and daily caps.
-- App Open: implemented for Android lifecycle returns from background, but only when enabled remotely.
-- Native: implemented with one Locations placement after the sixth location item, hidden while disabled remotely.
-- Rewarded: infrastructure only; no user-facing placement until a real enforceable reward exists.
-
-The AppLovin section of the remote JSON is parsed but unsupported. If a format selects `applovin`, that format is unavailable; the app does not install, initialize, or fall back to an AppLovin SDK.
-
-The Privacy Policy placeholder mentions Google Mobile Ads processing. Legal review, regional consent handling, and future Google UMP consent integration are required before publication. No fake consent dialog or iOS ATT prompt is included.
-
-## GitHub Setup
-
-This directory may not be initialized as a Git repository. Initialize only when you are ready:
-
-```powershell
-git init
-git add .
-git commit -m "Fast Tunnel tunnel-only prototype"
-git branch -M main
-git remote add origin REPLACE_WITH_GITHUB_REPOSITORY_URL
-git push -u origin main
-```
+Interstitial ads must not be shown while a network test is running or while results are being calculated.
 
 ## Codemagic And iOS
 
-The iOS project is kept structurally valid for future Codemagic builds. Version 1.0 intentionally avoids iOS NetworkExtension code, VPN entitlements, packet tunnel targets, and provisioning assumptions.
+The iOS project is kept structurally valid for Codemagic TestFlight builds.
 
-Suggested Codemagic build steps:
+Preserved settings:
 
-```bash
-flutter pub get
-flutter analyze
-flutter test
-flutter build ios --release --no-codesign
-```
+- Bundle ID: `com.zyverio.fasttunnel`
+- iOS deployment target: `15.0`
+- CocoaPods-based plugin integration
+- Swift Package Manager disabled for Flutter plugin integration
+- Existing signing and App Store Connect integration
 
-Add signing only when preparing a real iOS release.
+Windows cannot verify an iOS archive locally. Use Codemagic for iOS archive and TestFlight verification.
 
-## Future Native Integration
+## iOS Capability Audit
 
-Keep `TunnelService` as the boundary. A future native implementation should provide the same stream of state, session metadata, cancellation, retry, and disconnect behavior while adding real platform capabilities only after the required native code, entitlements, provisioning, and legal copy are ready.
+Version 1.0 intentionally avoids:
+
+- NetworkExtension framework usage for VPN
+- `NEVPNManager`
+- `NEPacketTunnelProvider`
+- Packet Tunnel Provider targets
+- Personal VPN entitlement
+- Network Extension entitlement
+- proxy routing
+- DNS modification
+- traffic tunneling

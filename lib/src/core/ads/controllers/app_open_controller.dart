@@ -5,8 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../features/tunnel/application/tunnel_providers.dart';
-import '../../../features/tunnel/domain/tunnel_service.dart';
+import '../../../features/network_test/application/network_test_providers.dart';
 import '../models/remote_ads_config.dart';
 import '../providers/ad_providers.dart';
 
@@ -51,11 +50,10 @@ class AppOpenController extends AsyncNotifier<AppOpenAdDebugState> {
         ads.config.appOpen.minimumBackgroundSeconds) {
       return;
     }
-    final tunnel = ref.read(tunnelServiceProvider).current;
-    if (tunnel.status == TunnelStatus.preparing ||
-        tunnel.status == TunnelStatus.connecting ||
-        tunnel.status == TunnelStatus.connected ||
-        tunnel.status == TunnelStatus.disconnecting) {
+    final testProgress = ref
+        .read(networkTestControllerProvider)
+        .maybeWhen(data: (value) => value, orElse: () => null);
+    if (testProgress?.isRunning ?? false) {
       return;
     }
     final prefs = await _preferences();

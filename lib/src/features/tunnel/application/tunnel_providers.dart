@@ -1,3 +1,8 @@
+// Future-only tunnel provider.
+//
+// Do not use this provider from current production screens. The active v1.0
+// product flow is the network test feature.
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/tunnel_service.dart';

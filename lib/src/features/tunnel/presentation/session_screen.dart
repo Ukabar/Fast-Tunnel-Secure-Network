@@ -1,3 +1,7 @@
+// Future-only detail screen for a later tunnel implementation.
+//
+// This screen is not registered in the current production router.
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -6,8 +10,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/ads/providers/ad_providers.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/app_components.dart';
-import '../../history/application/history_providers.dart';
-import '../../history/domain/session_history_entry.dart';
 import '../../public_ip/application/public_ip_providers.dart';
 import '../application/tunnel_providers.dart';
 import '../domain/tunnel_service.dart';
@@ -59,7 +61,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
     final session = state.session;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Session Details')),
+      appBar: AppBar(title: const Text('Future Test Details')),
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
@@ -101,7 +103,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                       Icons.shield_moon_outlined,
                       color: Colors.white,
                       size: 72,
-                      semanticLabel: 'Session status shield',
+                      semanticLabel: 'Future test status',
                     ),
                   ),
                 ),
@@ -126,8 +128,8 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
               if (session == null)
                 const EmptyState(
                   icon: Icons.power_off_outlined,
-                  title: 'No active session',
-                  body: 'Start a session from Home to view details.',
+                  title: 'No running test',
+                  body: 'Start a network test from Home to view details.',
                 )
               else ...[
                 _SessionFact(
@@ -137,10 +139,10 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                   ),
                 ),
                 _SessionFact(
-                  label: 'Selected location',
+                  label: 'Test endpoint',
                   value: '${session.city}, ${session.country}',
                 ),
-                _SessionFact(label: 'Session ID', value: session.id),
+                _SessionFact(label: 'Test ID', value: session.id),
                 _SessionFact(
                   label: 'Current public IP',
                   value: publicIp.when(
@@ -156,7 +158,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
                     ? () => _endSession(state.session!)
                     : null,
                 icon: const Icon(Icons.power_settings_new),
-                label: const Text('End Session'),
+                label: const Text('Stop Test'),
               ),
             ],
           ),
@@ -166,20 +168,7 @@ class _SessionScreenState extends ConsumerState<SessionScreen>
   }
 
   Future<void> _endSession(TunnelSession session) async {
-    final endedAt = DateTime.now();
     await ref.read(tunnelServiceProvider).disconnect();
-    await ref
-        .read(sessionHistoryControllerProvider.notifier)
-        .save(
-          SessionHistoryEntry(
-            id: '${endedAt.microsecondsSinceEpoch}-${session.locationId}',
-            location: '${session.city}, ${session.country}',
-            startedAt: session.startedAt,
-            endedAt: endedAt,
-            finalState: SessionFinalState.completed,
-            sessionIdentifier: session.id,
-          ),
-        );
     unawaited(
       ref
           .read(interstitialControllerProvider.notifier)

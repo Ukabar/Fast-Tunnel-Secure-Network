@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -7,8 +6,7 @@ import '../../../core/ads/utils/ad_screen_ids.dart';
 import '../../../core/ads/widgets/adaptive_banner_ad_widget.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../history/application/history_providers.dart';
-import '../../locations/application/locations_providers.dart';
-import '../../tunnel/application/tunnel_providers.dart';
+import '../../network_test/domain/network_test_models.dart';
 import '../application/settings_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -17,159 +15,101 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsControllerProvider);
-    final locations = ref.watch(plannedLocationsProvider);
-    final tunnelState = ref
-        .watch(tunnelStateProvider)
-        .when(
-          data: (state) => state,
-          error: (error, stackTrace) =>
-              ref.watch(tunnelServiceProvider).current,
-          loading: () => ref.watch(tunnelServiceProvider).current,
-        );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: SafeArea(
         child: settings.when(
           data: (settings) {
-            final selectedLocationId =
-                locations.any(
-                  (location) => location.id == settings.preferredLocationId,
-                )
-                ? settings.preferredLocationId!
-                : locations.first.id;
-
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
                 const SectionHeader(title: 'Appearance'),
-                SegmentedButton<ThemeMode>(
-                  segments: const [
-                    ButtonSegment(
-                      value: ThemeMode.system,
-                      label: Text('System'),
-                      icon: Icon(Icons.brightness_auto_outlined),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.light,
-                      label: Text('Light'),
-                      icon: Icon(Icons.light_mode_outlined),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.dark,
-                      label: Text('Dark'),
-                      icon: Icon(Icons.dark_mode_outlined),
-                    ),
-                  ],
-                  selected: {settings.themeMode},
-                  onSelectionChanged: (selection) => ref
-                      .read(settingsControllerProvider.notifier)
-                      .setThemeMode(selection.first),
+                _SettingsPanel(
+                  child: _ThemeModeSelector(
+                    selected: settings.themeMode,
+                    onChanged: (value) => ref
+                        .read(settingsControllerProvider.notifier)
+                        .setThemeMode(value),
+                  ),
                 ),
                 const SizedBox(height: 20),
-                const SectionHeader(title: 'Preferred Location'),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedLocationId,
-                  decoration: const InputDecoration(
-                    labelText: 'Location',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    for (final location in locations)
-                      DropdownMenuItem(
-                        value: location.id,
-                        child: Text(
-                          '${location.flag} ${location.city}, ${location.country}',
+                const SectionHeader(title: 'Network Test'),
+                _SettingsPanel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<NetworkTestAccuracy>(
+                        initialValue: settings.testAccuracy,
+                        isExpanded: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Test accuracy',
                         ),
+                        items: [
+                          for (final accuracy in NetworkTestAccuracy.values)
+                            DropdownMenuItem(
+                              value: accuracy,
+                              child: Text(
+                                '${accuracy.label} (${accuracy.attempts})',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            ref
+                                .read(settingsControllerProvider.notifier)
+                                .setTestAccuracy(value);
+                          }
+                        },
                       ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      ref
-                          .read(settingsControllerProvider.notifier)
-                          .setPreferredLocation(value);
-                    }
-                  },
+                      const SizedBox(height: 12),
+                      Text(
+                        'Latency uses lightweight HTTPS request timing. DNS, HTTPS reachability, request failures, jitter, and public IP are measured only when you start a test.',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const AdaptiveBannerAdWidget(screenId: AdScreenIds.settings),
+                const SizedBox(height: 16),
+                const SectionHeader(title: 'History'),
+                _SettingsPanel(
+                  padding: EdgeInsets.zero,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                    leading: const LeadingIcon(
+                      icon: Icons.delete_sweep_outlined,
+                    ),
+                    title: const Text('Clear test history'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      final confirmed = await showConfirmationDialog(
+                        context: context,
+                        title: 'Clear test history?',
+                        body:
+                            'This removes locally stored network test results.',
+                        confirmLabel: 'Clear',
+                      );
+                      if (confirmed) {
+                        await ref
+                            .read(sessionHistoryControllerProvider.notifier)
+                            .clear();
+                      }
+                    },
+                  ),
                 ),
                 const SizedBox(height: 20),
-                const SectionHeader(title: 'Connection'),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Connection animation'),
-                  subtitle: const Text('Animate the main session button'),
-                  value: settings.connectionAnimationEnabled,
-                  onChanged: (value) => ref
-                      .read(settingsControllerProvider.notifier)
-                      .setConnectionAnimationEnabled(value),
-                ),
-                Text(tunnelState.message),
-                const Divider(height: 28),
-                const SectionHeader(title: 'Advertising'),
-                const ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(Icons.campaign_outlined),
-                  title: Text('Advertising'),
-                  subtitle: Text('Ads help support continued development.'),
-                ),
-                if (kDebugMode)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.bug_report_outlined),
-                    title: const Text('Developer controls'),
-                    subtitle: const Text(
-                      'Failure simulation and delay controls',
-                    ),
-                    onTap: () => context.push('/debug/mock-tunnel'),
+                const SectionHeader(title: 'About'),
+                _SettingsPanel(
+                  padding: EdgeInsets.zero,
+                  child: _SettingsLink(
+                    icon: Icons.info_outline,
+                    label: 'About',
+                    onTap: () => context.push('/about'),
                   ),
-                const Divider(height: 28),
-                const SectionHeader(title: 'Local Data'),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.delete_sweep_outlined),
-                  title: const Text('Clear session history'),
-                  onTap: () async {
-                    final confirmed = await showConfirmationDialog(
-                      context: context,
-                      title: 'Clear session history?',
-                      body: 'This removes locally stored session records.',
-                      confirmLabel: 'Clear',
-                    );
-                    if (confirmed) {
-                      await ref
-                          .read(sessionHistoryControllerProvider.notifier)
-                          .clear();
-                    }
-                  },
                 ),
-                const Divider(height: 28),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.info_outline),
-                  title: const Text('About'),
-                  onTap: () => context.push('/about'),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.privacy_tip_outlined),
-                  title: const Text('Privacy Policy'),
-                  onTap: () => context.push('/privacy'),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.gavel_outlined),
-                  title: const Text('Terms of Use'),
-                  onTap: () => context.push('/terms'),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.workspace_premium_outlined),
-                  title: const Text('Future Features'),
-                  onTap: () => context.push('/premium'),
-                ),
-                const SizedBox(height: 12),
-                const Text('App version 1.0.0+1'),
-                const SizedBox(height: 12),
-                const AdaptiveBannerAdWidget(screenId: AdScreenIds.settings),
               ],
             );
           },
@@ -186,6 +126,91 @@ class SettingsScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SettingsPanel extends StatelessWidget {
+  const _SettingsPanel({
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(padding: padding, child: child),
+    );
+  }
+}
+
+class _ThemeModeSelector extends StatelessWidget {
+  const _ThemeModeSelector({required this.selected, required this.onChanged});
+
+  final ThemeMode selected;
+  final ValueChanged<ThemeMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 300;
+        return SegmentedButton<ThemeMode>(
+          showSelectedIcon: false,
+          expandedInsets: EdgeInsets.zero,
+          style: ButtonStyle(
+            visualDensity: compact ? VisualDensity.compact : null,
+            padding: WidgetStatePropertyAll(
+              EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
+            ),
+          ),
+          segments: [
+            ButtonSegment(
+              value: ThemeMode.system,
+              label: Text(compact ? 'Auto' : 'System'),
+              icon: compact ? null : const Icon(Icons.brightness_auto_outlined),
+            ),
+            ButtonSegment(
+              value: ThemeMode.light,
+              label: const Text('Light'),
+              icon: compact ? null : const Icon(Icons.light_mode_outlined),
+            ),
+            ButtonSegment(
+              value: ThemeMode.dark,
+              label: const Text('Dark'),
+              icon: compact ? null : const Icon(Icons.dark_mode_outlined),
+            ),
+          ],
+          selected: {selected},
+          onSelectionChanged: (selection) => onChanged(selection.first),
+        );
+      },
+    );
+  }
+}
+
+class _SettingsLink extends StatelessWidget {
+  const _SettingsLink({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+      leading: LeadingIcon(icon: icon),
+      title: Text(label),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: onTap,
     );
   }
 }

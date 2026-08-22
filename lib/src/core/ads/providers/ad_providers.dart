@@ -8,8 +8,7 @@ import '../controllers/full_screen_ad_coordinator.dart';
 import '../controllers/interstitial_controller.dart';
 import '../controllers/rewarded_controller.dart';
 import '../data/ads_config_repository.dart';
-import '../data/cached_ads_config_repository.dart';
-import '../data/remote_ads_config_repository.dart';
+import '../data/embedded_ads_config_repository.dart';
 import '../services/app_open_ad_service.dart';
 import '../services/banner_ad_service.dart';
 import '../services/interstitial_ad_service.dart';
@@ -27,20 +26,10 @@ final mobileAdsInitializerProvider = Provider<MobileAdsInitializer>((ref) {
   return MobileAdsInitializer();
 });
 
-final remoteAdsConfigRepositoryProvider = Provider<RemoteAdsConfigRepository>((
-  ref,
-) {
-  return RemoteAdsConfigRepository();
-});
-
 final adsConfigRepositoryProvider = FutureProvider<AdsConfigRepository>((
   ref,
 ) async {
-  final preferences = await ref.watch(sharedPreferencesForAdsProvider.future);
-  return CachedAdsConfigRepository(
-    preferences: preferences,
-    remote: ref.watch(remoteAdsConfigRepositoryProvider),
-  );
+  return EmbeddedAdsConfigRepository();
 });
 
 final adsControllerProvider = AsyncNotifierProvider<AdsController, AdsState>(

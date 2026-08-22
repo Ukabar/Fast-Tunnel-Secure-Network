@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/storage/preferences_provider.dart';
+import '../../network_test/domain/network_test_models.dart';
 import '../data/settings_repository.dart';
 import '../domain/app_settings.dart';
 
@@ -51,10 +52,8 @@ class SettingsController extends AsyncNotifier<AppSettings> {
     );
   }
 
-  Future<void> setConnectionAnimationEnabled(bool value) async {
-    await _update(
-      (settings) => settings.copyWith(connectionAnimationEnabled: value),
-    );
+  Future<void> setTestAccuracy(NetworkTestAccuracy accuracy) async {
+    await _update((settings) => settings.copyWith(testAccuracy: accuracy));
   }
 
   Future<void> _update(

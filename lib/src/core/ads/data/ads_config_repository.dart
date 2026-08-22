@@ -1,8 +1,5 @@
 import '../models/remote_ads_config.dart';
 
-const defaultAdsConfigUrl =
-    'https://raw.githubusercontent.com/Ukabar/Ads_config_Tunnel/main/ads_config.json';
-
 class AdsConfigSnapshot {
   const AdsConfigSnapshot({
     required this.config,

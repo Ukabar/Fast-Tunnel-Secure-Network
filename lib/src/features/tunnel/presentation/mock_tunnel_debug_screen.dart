@@ -1,3 +1,7 @@
+// Future-only debug surface for a later tunnel implementation.
+//
+// This screen is not registered in the current production router.
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

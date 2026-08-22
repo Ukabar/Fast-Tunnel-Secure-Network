@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../network_test/domain/network_test_models.dart';
 import '../domain/app_settings.dart';
 
 abstract interface class SettingsRepository {
@@ -15,7 +16,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
   static const themeModeKey = 'settings_theme_mode';
   static const onboardingCompletedKey = 'settings_onboarding_completed';
   static const notifyPremiumKey = 'settings_notify_premium';
-  static const connectionAnimationKey = 'settings_connection_animation';
+  static const testAccuracyKey = 'settings_test_accuracy';
   static const preferredLocationKey = 'settings_preferred_location';
   static const favoriteLocationIdsKey = 'settings_favorite_locations';
 
@@ -28,8 +29,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       onboardingCompleted:
           _preferences.getBool(onboardingCompletedKey) ?? false,
       notifyForPlannedPremium: _preferences.getBool(notifyPremiumKey) ?? false,
-      connectionAnimationEnabled:
-          _preferences.getBool(connectionAnimationKey) ?? true,
+      testAccuracy: _accuracyFromName(_preferences.getString(testAccuracyKey)),
       preferredLocationId: _preferences.getString(preferredLocationKey),
       favoriteLocationIds:
           _preferences.getStringList(favoriteLocationIdsKey) ??
@@ -48,10 +48,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       notifyPremiumKey,
       settings.notifyForPlannedPremium,
     );
-    await _preferences.setBool(
-      connectionAnimationKey,
-      settings.connectionAnimationEnabled,
-    );
+    await _preferences.setString(testAccuracyKey, settings.testAccuracy.name);
     final preferred = settings.preferredLocationId;
     if (preferred == null) {
       await _preferences.remove(preferredLocationKey);
@@ -68,6 +65,13 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
     return ThemeMode.values.firstWhere(
       (mode) => mode.name == name,
       orElse: () => ThemeMode.system,
+    );
+  }
+
+  NetworkTestAccuracy _accuracyFromName(String? name) {
+    return NetworkTestAccuracy.values.firstWhere(
+      (accuracy) => accuracy.name == name,
+      orElse: () => NetworkTestAccuracy.accurate,
     );
   }
 }

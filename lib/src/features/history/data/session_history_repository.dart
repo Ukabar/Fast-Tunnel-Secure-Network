@@ -18,8 +18,8 @@ class SharedPreferencesSessionHistoryRepository
     implements SessionHistoryRepository {
   const SharedPreferencesSessionHistoryRepository(this._preferences);
 
-  static const key = 'session_history_v1';
-  static const maxItems = 100;
+  static const key = 'network_test_history_v1';
+  static const maxItems = 50;
 
   final SharedPreferences _preferences;
 

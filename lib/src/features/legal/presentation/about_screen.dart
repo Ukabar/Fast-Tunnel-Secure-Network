@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/widgets/app_components.dart';
+
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
@@ -19,29 +21,57 @@ class AboutScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Tunnel interface build', style: theme.textTheme.titleLarge),
-          const SizedBox(height: 12),
-          const Text(
-            'Fast Tunnel provides a focused interface for selecting a location and managing a connection session.',
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const BrandMark(size: 62),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Network testing utility',
+                          style: theme.textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Fast Tunnel measures internet quality with user-triggered diagnostics. It checks public IP, latency, jitter, request failures, DNS, and HTTPS reachability.',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 24),
-          _InfoRow(
-            icon: Icons.info_outline,
-            title: 'Simulation mode',
+          const _InfoRow(
+            icon: Icons.speed_outlined,
+            title: 'Real network metrics',
             body:
-                'Connection states are simulated and device traffic is not routed.',
+                'Results are calculated from HTTPS timing, DNS resolution, and reachability checks.',
           ),
-          _InfoRow(
+          const _InfoRow(
             icon: Icons.public_outlined,
-            title: 'Location control',
+            title: 'Current public IP',
             body:
-                'Favorite and preferred locations are stored locally on this device.',
+                'The app can retrieve your current public IP as an informational diagnostic value.',
           ),
-          _InfoRow(
-            icon: Icons.privacy_tip_outlined,
-            title: 'Private local data',
+          const _InfoRow(
+            icon: Icons.storage_outlined,
+            title: 'Local history',
             body:
-                'Session records and app preferences remain local unless you export or back them up separately.',
+                'Completed test results and app preferences are stored locally on this device.',
+          ),
+          const _InfoRow(
+            icon: Icons.shield_outlined,
+            title: 'VPN coming soon',
+            body:
+                'VPN functionality is planned for a future update and is not available in the current version.',
           ),
         ],
       ),
@@ -60,23 +90,28 @@ class _InfoRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(body),
-              ],
-            ),
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LeadingIcon(icon: icon),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 4),
+                    Text(body),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

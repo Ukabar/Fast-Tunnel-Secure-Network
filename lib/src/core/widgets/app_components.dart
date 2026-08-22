@@ -1,5 +1,59 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme/app_theme.dart';
+
+class BrandMark extends StatelessWidget {
+  const BrandMark({super.key, required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: AppGradients.brand,
+        boxShadow: [
+          BoxShadow(
+            color: AppPalette.cyan.withValues(alpha: 0.28),
+            blurRadius: size * 0.42,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Icon(
+        Icons.bolt_rounded,
+        size: size * 0.5,
+        color: Colors.white,
+        semanticLabel: 'Fast Tunnel',
+      ),
+    );
+  }
+}
+
+class LeadingIcon extends StatelessWidget {
+  const LeadingIcon({super.key, required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: 42,
+      height: 42,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: colors.primary),
+    );
+  }
+}
+
 class SectionHeader extends StatelessWidget {
   const SectionHeader({super.key, required this.title, this.action});
 

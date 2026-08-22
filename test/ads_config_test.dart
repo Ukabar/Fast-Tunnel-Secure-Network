@@ -85,7 +85,7 @@ void main() {
       final json = _validConfig();
       ((json['formats']! as Map<String, Object?>)['banner']!
           as Map<String, Object?>)['screens'] = [
-        'home',
+        'unknown',
         'locations',
       ];
 

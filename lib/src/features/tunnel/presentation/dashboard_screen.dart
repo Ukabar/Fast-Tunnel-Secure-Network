@@ -1,23 +1,19 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/ads/providers/ad_providers.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/ads/utils/ad_screen_ids.dart';
+import '../../../core/ads/widgets/adaptive_banner_ad_widget.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../history/application/history_providers.dart';
-import '../../history/domain/session_history_entry.dart';
 import '../../history/presentation/history_screen.dart';
-import '../../locations/application/locations_providers.dart';
-import '../../locations/domain/planned_location.dart';
-import '../../locations/presentation/locations_screen.dart';
-import '../../public_ip/application/public_ip_providers.dart';
+import '../../network_test/application/network_test_providers.dart';
+import '../../network_test/domain/network_test_models.dart';
 import '../../settings/application/settings_providers.dart';
 import '../../settings/presentation/settings_screen.dart';
-import '../application/tunnel_providers.dart';
-import '../domain/tunnel_service.dart';
+import '../../vpn/presentation/vpn_coming_soon_card.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -33,7 +29,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    Future<void>.delayed(const Duration(milliseconds: 700), () {
+    Future<void>.delayed(const Duration(milliseconds: 550), () {
       if (mounted) setState(() => _showSplash = false);
     });
   }
@@ -41,7 +37,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
-
     if (_showSplash) return const SplashScreen();
 
     return settings.when(
@@ -50,12 +45,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         return Scaffold(
           body: IndexedStack(
             index: _index,
-            children: const [
-              HomeScreen(),
-              LocationsScreen(),
-              HistoryScreen(),
-              SettingsScreen(),
-            ],
+            children: const [HomeScreen(), HistoryScreen(), SettingsScreen()],
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: _index,
@@ -63,13 +53,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
+                selectedIcon: Icon(Icons.home_rounded),
                 label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.public_outlined),
-                selectedIcon: Icon(Icons.public),
-                label: 'Locations',
               ),
               NavigationDestination(
                 icon: Icon(Icons.history_outlined),
@@ -91,54 +76,34 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 }
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       body: DecoratedBox(
-        decoration: _pageGradient(theme),
-        child: SafeArea(
-          child: Center(
-            child: FadeTransition(
-              opacity: Tween<double>(begin: 0.6, end: 1).animate(
-                CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-              ),
+        decoration: _pageGradient(),
+        child: Theme(
+          data: AppTheme.dark(),
+          child: SafeArea(
+            child: Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const _TunnelLogo(size: 88),
+                  const BrandMark(size: 88),
                   const SizedBox(height: 18),
                   Text(
                     'Fast Tunnel',
-                    style: theme.textTheme.headlineMedium?.copyWith(
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
                       fontWeight: FontWeight.w800,
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Internet & Network Test',
+                    style: TextStyle(color: Color(0xFFB8D4E6)),
                   ),
                 ],
               ),
@@ -150,197 +115,122 @@ class _SplashScreenState extends State<SplashScreen>
   }
 }
 
-class HomeScreen extends ConsumerStatefulWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends ConsumerState<HomeScreen> {
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final publicIp = ref.watch(currentPublicIpProvider);
-    final tunnelState = ref
-        .watch(tunnelStateProvider)
-        .when(
-          data: (state) => state,
-          error: (error, stackTrace) =>
-              ref.watch(tunnelServiceProvider).current,
-          loading: () => ref.watch(tunnelServiceProvider).current,
-        );
-    final settings = ref
-        .watch(settingsControllerProvider)
-        .when(
-          data: (settings) => settings,
-          error: (error, stackTrace) => null,
-          loading: () => null,
-        );
-    final selectedLocation = _selectedLocation(ref);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final progress = ref.watch(networkTestControllerProvider);
+    final history = ref
+        .watch(sessionHistoryControllerProvider)
+        .maybeWhen(data: (value) => value, orElse: () => null);
+    final latest = history == null || history.isEmpty ? null : history.first;
+    final state = progress.maybeWhen(
+      data: (value) => value,
+      orElse: () => const NetworkTestProgress.idle(),
+    );
+    final result = state.result;
 
     return Scaffold(
       body: DecoratedBox(
-        decoration: _pageGradient(Theme.of(context)),
+        decoration: _pageGradient(),
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.fromLTRB(18, 16, 18, 96),
             children: [
-              _HomeHeader(location: selectedLocation),
+              const _HomeHeader(),
               const SizedBox(height: 16),
-              _ConnectionCard(
-                location: selectedLocation,
-                state: tunnelState,
-                animate: settings?.connectionAnimationEnabled ?? true,
-                elapsedLabel: tunnelState.session == null
-                    ? null
-                    : formatSessionDuration(
-                        DateTime.now().difference(
-                          tunnelState.session!.startedAt,
-                        ),
-                      ),
-                publicIp: publicIp.when(
-                  data: (result) => result.ip ?? 'Unavailable',
-                  error: (error, stackTrace) => 'Unavailable',
-                  loading: () => 'Loading...',
+              _CurrentIpCard(publicIp: result?.publicIp),
+              const SizedBox(height: 16),
+              const AdaptiveBannerAdWidget(screenId: AdScreenIds.home),
+              const SizedBox(height: 16),
+              _TestCard(progress: state),
+              if (result != null) ...[
+                const SizedBox(height: 16),
+                _ResultSummary(result: result),
+              ],
+              if (result == null && latest != null) ...[
+                const SizedBox(height: 16),
+                _RecentResultShortcut(
+                  title: latest.scoreLabel,
+                  score: latest.score,
+                  onOpen: () => context.push('/history/${latest.id}'),
                 ),
-                onPrimary: () => _handlePrimary(tunnelState, selectedLocation),
-                onRetry: () => _retry(selectedLocation),
-                onOpenSession: () => context.push('/session'),
-                onChangeLocation: () => context.push('/locations'),
-                onSettings: () => context.push('/settings'),
-              ),
+              ],
+              const SizedBox(height: 16),
+              const VpnComingSoonCard(),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  PlannedLocation _selectedLocation(WidgetRef ref) {
-    final locations = ref.watch(plannedLocationsProvider);
-    final settings = ref
-        .watch(settingsControllerProvider)
-        .when(
-          data: (settings) => settings,
-          error: (error, stackTrace) => null,
-          loading: () => null,
-        );
-    return locations.firstWhere(
-      (location) => location.id == settings?.preferredLocationId,
-      orElse: () => locations.first,
-    );
-  }
+class _CurrentIpCard extends StatelessWidget {
+  const _CurrentIpCard({required this.publicIp});
 
-  Future<void> _handlePrimary(
-    TunnelState state,
-    PlannedLocation location,
-  ) async {
-    final service = ref.read(tunnelServiceProvider);
-    if (state.canCancel) {
-      final now = DateTime.now();
-      await service.cancel();
-      await _saveHistory(
-        location: location,
-        startedAt: now,
-        endedAt: now,
-        finalState: SessionFinalState.cancelled,
-      );
-      return;
-    }
-    if (state.hasDemoSession) {
-      final session = state.session!;
-      await service.disconnect();
-      await _saveHistory(
-        location: location,
-        startedAt: session.startedAt,
-        endedAt: DateTime.now(),
-        finalState: SessionFinalState.completed,
-        sessionIdentifier: session.id,
-      );
-      return;
-    }
-    await service.connect(location);
-    final next = service.current;
-    if (next.hasDemoSession && mounted) {
-      context.push('/session');
-    } else if (next.status == TunnelStatus.failed) {
-      final now = DateTime.now();
-      await _saveHistory(
-        location: location,
-        startedAt: now,
-        endedAt: now,
-        finalState: SessionFinalState.failed,
-      );
-    }
-  }
+  final String? publicIp;
 
-  Future<void> _retry(PlannedLocation location) async {
-    await ref.read(tunnelServiceProvider).retry(location);
-  }
-
-  Future<void> _saveHistory({
-    required PlannedLocation location,
-    required DateTime startedAt,
-    required DateTime endedAt,
-    required SessionFinalState finalState,
-    String? sessionIdentifier,
-  }) async {
-    await ref
-        .read(sessionHistoryControllerProvider.notifier)
-        .save(
-          SessionHistoryEntry(
-            id: '${endedAt.microsecondsSinceEpoch}-${location.id}',
-            location: '${location.city}, ${location.country}',
-            startedAt: startedAt,
-            endedAt: endedAt,
-            finalState: finalState,
-            sessionIdentifier: sessionIdentifier,
-          ),
-        );
-    if (finalState == SessionFinalState.completed &&
-        sessionIdentifier != null) {
-      unawaited(
-        ref
-            .read(interstitialControllerProvider.notifier)
-            .recordCompletedSession(
-              sessionId: sessionIdentifier,
-              tunnelActive: ref
-                  .read(tunnelServiceProvider)
-                  .current
-                  .hasDemoSession,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppRadii.card),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppPalette.cyan.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(AppRadii.control),
             ),
-      );
-    }
+            child: const Icon(Icons.public_outlined, color: AppPalette.cyan),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Current Public IP',
+                  style: TextStyle(color: Color(0xFFB8D4E6), fontSize: 13),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  publicIp ?? 'Run a test to check this value',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.location});
-
-  final PlannedLocation location;
+  const _HomeHeader();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(
       children: [
-        const _TunnelLogo(size: 52),
+        const BrandMark(size: 56),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
@@ -349,16 +239,14 @@ class _HomeHeader extends StatelessWidget {
               Text(
                 'Fast Tunnel',
                 style: theme.textTheme.headlineSmall?.copyWith(
+                  color: Colors.white,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(height: 2),
               Text(
-                '${location.flag} ${location.city}, ${location.country}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                'Internet Test',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: const Color(0xFFB8D4E6),
                 ),
               ),
             ],
@@ -366,6 +254,7 @@ class _HomeHeader extends StatelessWidget {
         ),
         IconButton(
           tooltip: 'Settings',
+          color: Colors.white,
           icon: const Icon(Icons.settings_outlined),
           onPressed: () => context.push('/settings'),
         ),
@@ -374,188 +263,119 @@ class _HomeHeader extends StatelessWidget {
   }
 }
 
-class _ConnectionCard extends StatefulWidget {
-  const _ConnectionCard({
-    required this.location,
-    required this.state,
-    required this.animate,
-    required this.elapsedLabel,
-    required this.publicIp,
-    required this.onPrimary,
-    required this.onRetry,
-    required this.onOpenSession,
-    required this.onChangeLocation,
-    required this.onSettings,
-  });
+class _TestCard extends ConsumerWidget {
+  const _TestCard({required this.progress});
 
-  final PlannedLocation location;
-  final TunnelState state;
-  final bool animate;
-  final String? elapsedLabel;
-  final String publicIp;
-  final VoidCallback onPrimary;
-  final VoidCallback onRetry;
-  final VoidCallback onOpenSession;
-  final VoidCallback onChangeLocation;
-  final VoidCallback onSettings;
+  final NetworkTestProgress progress;
 
   @override
-  State<_ConnectionCard> createState() => _ConnectionCardState();
-}
-
-class _ConnectionCardState extends State<_ConnectionCard>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1300),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final state = widget.state;
-    final active = state.hasDemoSession;
+    final running = progress.isRunning;
+    final completed = progress.phase == NetworkTestPhase.completed;
+    final controller = ref.read(networkTestControllerProvider.notifier);
+    final progressValue = progress.totalAttempts == 0
+        ? null
+        : progress.completedAttempts / progress.totalAttempts;
 
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0x8840CFFF), Color(0x552465F5), Color(0x3307111F)],
-        ),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        gradient: AppGradients.testCard,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF36C5F0).withValues(alpha: 0.16),
-            blurRadius: 32,
-            offset: const Offset(0, 18),
+            color: AppPalette.blue.withValues(alpha: 0.22),
+            blurRadius: 26,
+            offset: const Offset(0, 12),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SectionHeader(title: 'Selected Location'),
-            Row(
-              children: [
-                Text(
-                  widget.location.flag,
-                  style: const TextStyle(fontSize: 42),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.location.country,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        widget.location.city,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            const SectionHeader(title: 'Tunnel Status'),
-            Text(
-              state.displayStatus,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.headlineSmall?.copyWith(
+            const Text(
+              'Network Test',
+              style: TextStyle(
+                color: Color(0xFFB9E9F7),
+                fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
-              active
-                  ? 'Connected to ${widget.location.city}, ${widget.location.country}'
-                  : state.message,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              progress.statusLabel,
+              style: theme.textTheme.headlineSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
               ),
             ),
+            if (progress.message != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                progress.message!,
+                style: const TextStyle(color: Color(0xFFC4DBEA)),
+              ),
+            ],
+            const SizedBox(height: 20),
+            if (running)
+              LinearProgressIndicator(
+                value: progressValue,
+                color: AppPalette.cyan,
+                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
+            if (progress.totalAttempts > 0) ...[
+              const SizedBox(height: 8),
+              Text(
+                '${progress.completedAttempts}/${progress.totalAttempts} latency attempts',
+                style: const TextStyle(color: Color(0xFFC4DBEA)),
+              ),
+            ],
             const SizedBox(height: 24),
             Center(
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  final scale = widget.animate && (active || state.isBusy)
-                      ? 1 + (_controller.value * 0.08)
-                      : 1.0;
-                  return Transform.scale(scale: scale, child: child);
-                },
-                child: Semantics(
-                  button: true,
-                  label: 'Connection button',
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(999),
-                    onTap: _primaryEnabled(state) ? widget.onPrimary : null,
-                    child: Container(
-                      constraints: const BoxConstraints(
-                        minWidth: 156,
-                        minHeight: 156,
-                        maxWidth: 184,
-                        maxHeight: 184,
-                      ),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: active
-                              ? const [Color(0xFF36C5F0), Color(0xFF4ADE80)]
-                              : const [Color(0xFF36C5F0), Color(0xFF1266F1)],
+              child: Semantics(
+                button: true,
+                label: running ? 'Cancel Test' : 'Start network test',
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: Ink(
+                    width: 158,
+                    height: 158,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: AppGradients.brand,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppPalette.cyan.withValues(alpha: 0.34),
+                          blurRadius: 30,
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF36C5F0,
-                            ).withValues(alpha: 0.34),
-                            blurRadius: 42,
-                          ),
-                        ],
-                      ),
+                      ],
+                    ),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: running ? controller.cancel : controller.start,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            active
-                                ? Icons.power_settings_new
-                                : Icons.bolt_rounded,
+                            running ? Icons.close_rounded : Icons.bolt_rounded,
                             color: Colors.white,
-                            size: 48,
+                            size: 42,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            _primaryLabel(state),
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.titleMedium?.copyWith(
+                            running
+                                ? 'Cancel Test'
+                                : completed
+                                ? 'Test Again'
+                                : 'Start Test',
+                            style: const TextStyle(
                               color: Colors.white,
+                              fontSize: 17,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -566,46 +386,66 @@ class _ConnectionCardState extends State<_ConnectionCard>
                 ),
               ),
             ),
-            if (state.canCancel) ...[
-              const SizedBox(height: 10),
-              TextButton.icon(
-                onPressed: widget.onPrimary,
-                icon: const Icon(Icons.close),
-                label: const Text('Cancel'),
-              ),
-            ],
-            if (state.status == TunnelStatus.failed) ...[
-              const SizedBox(height: 10),
-              OutlinedButton.icon(
-                onPressed: widget.onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
-            const SizedBox(height: 24),
-            _FactRow(label: 'Current Public IP', value: widget.publicIp),
-            if (widget.elapsedLabel != null)
-              _FactRow(label: 'Elapsed time', value: widget.elapsedLabel!),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResultSummary extends ConsumerWidget {
+  const _ResultSummary({required this.result});
+
+  final NetworkTestResult result;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
               children: [
-                if (active)
-                  _ShortcutButton(
-                    icon: Icons.open_in_new,
-                    label: 'Session Details',
-                    onPressed: widget.onOpenSession,
+                Expanded(
+                  child: _MetricTile(
+                    label: 'Network Score',
+                    value: '${result.score}',
+                    detail: result.scoreLabel,
                   ),
-                _ShortcutButton(
-                  icon: Icons.public_outlined,
-                  label: 'Change Location',
-                  onPressed: widget.onChangeLocation,
                 ),
-                _ShortcutButton(
-                  icon: Icons.settings_outlined,
-                  label: 'Settings',
-                  onPressed: widget.onSettings,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MetricTile(
+                    label: 'Current Public IP',
+                    value: result.publicIp ?? 'Unavailable',
+                    detail: 'Measured value',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            _MetricGrid(result: result),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => ref
+                        .read(networkTestControllerProvider.notifier)
+                        .start(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Run Again'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.push('/history'),
+                    icon: const Icon(Icons.history),
+                    label: const Text('Test History'),
+                  ),
                 ),
               ],
             ),
@@ -614,118 +454,118 @@ class _ConnectionCardState extends State<_ConnectionCard>
       ),
     );
   }
+}
 
-  bool _primaryEnabled(TunnelState state) {
-    return state.status != TunnelStatus.preparing &&
-        state.status != TunnelStatus.connecting &&
-        state.status != TunnelStatus.disconnecting;
-  }
+class _MetricGrid extends StatelessWidget {
+  const _MetricGrid({required this.result});
 
-  String _primaryLabel(TunnelState state) {
-    return switch (state.status) {
-      TunnelStatus.preparing => 'Preparing…',
-      TunnelStatus.connecting => 'Connecting…',
-      TunnelStatus.disconnecting => 'Disconnecting…',
-      TunnelStatus.connected => 'Disconnect',
-      _ => 'Connect',
-    };
+  final NetworkTestResult result;
+
+  @override
+  Widget build(BuildContext context) {
+    final metrics = [
+      ('Average Latency', _ms(result.latency.average)),
+      ('Minimum Latency', _ms(result.latency.minimum)),
+      ('Maximum Latency', _ms(result.latency.maximum)),
+      ('Jitter', _ms(result.latency.jitter)),
+      ('Failure Rate', '${(result.latency.failureRate * 100).round()}%'),
+      ('DNS', result.dns.label),
+      ('HTTPS', result.https.label),
+      ('Test Time', formatTimestamp(result.completedAt)),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = (constraints.maxWidth - 10) / 2;
+        return Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            for (final metric in metrics)
+              SizedBox(
+                width: width,
+                child: _MetricTile(
+                  label: metric.$1,
+                  value: metric.$2,
+                  detail: 'Real test',
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }
 
-class _FactRow extends StatelessWidget {
-  const _FactRow({required this.label, required this.value});
+class _RecentResultShortcut extends StatelessWidget {
+  const _RecentResultShortcut({
+    required this.title,
+    required this.score,
+    required this.onOpen,
+  });
+
+  final String title;
+  final int score;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: ListTile(
+        onTap: onOpen,
+        leading: const CircleAvatar(child: Icon(Icons.speed)),
+        title: const Text('Recent Test'),
+        subtitle: Text('$title | Network score $score'),
+        trailing: const Icon(Icons.chevron_right),
+      ),
+    );
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.label,
+    required this.value,
+    required this.detail,
+  });
 
   final String label;
   final String value;
+  final String detail;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: theme.textTheme.labelMedium),
+            const SizedBox(height: 6),
+            Text(
               value,
-              textAlign: TextAlign.end,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ShortcutButton extends StatelessWidget {
-  const _ShortcutButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(icon),
-      label: Text(label),
-    );
-  }
-}
-
-class _TunnelLogo extends StatelessWidget {
-  const _TunnelLogo({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: const LinearGradient(
-          colors: [Color(0xFF36C5F0), Color(0xFF1266F1)],
+            Text(detail, style: theme.textTheme.bodySmall),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF36C5F0).withValues(alpha: 0.34),
-            blurRadius: 28,
-          ),
-        ],
       ),
-      child: Icon(Icons.bolt_rounded, size: size * 0.52, color: Colors.white),
     );
   }
 }
 
-BoxDecoration _pageGradient(ThemeData theme) {
-  return BoxDecoration(
-    color: theme.colorScheme.surface,
-    gradient: const RadialGradient(
-      center: Alignment.topRight,
-      radius: 1.25,
-      colors: [Color(0xFF123A5C), Color(0xFF07111F)],
-    ),
-  );
-}
+BoxDecoration _pageGradient() =>
+    const BoxDecoration(color: AppPalette.navy, gradient: AppGradients.home);
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -748,62 +588,66 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final pages = const [
       _OnboardingPage(
-        icon: Icons.bolt_rounded,
+        icon: Icons.speed_rounded,
         title: 'Fast Tunnel',
-        body: 'Choose and manage your preferred connection location.',
+        body: 'Check your network quality in seconds.',
       ),
       _OnboardingPage(
-        icon: Icons.public_outlined,
-        title: 'Global Locations',
-        body: 'Browse locations and save your favorites.',
+        icon: Icons.query_stats_rounded,
+        title: 'Real Network Metrics',
+        body:
+            'Measure latency, jitter, request failures, DNS, and HTTPS reachability.',
       ),
       _OnboardingPage(
-        icon: Icons.power_settings_new,
-        title: 'Simple Control',
-        body: 'Start and end a session from one clear interface.',
+        icon: Icons.history_rounded,
+        title: 'Track Your Results',
+        body: 'Review previous tests and compare your network performance.',
       ),
     ];
 
     return Scaffold(
       body: DecoratedBox(
-        decoration: _pageGradient(Theme.of(context)),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(22),
-            child: Column(
-              children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: _complete,
-                    child: const Text('Skip'),
-                  ),
-                ),
-                Expanded(
-                  child: PageView(
-                    controller: _controller,
-                    onPageChanged: (index) => setState(() => _index = index),
-                    children: pages,
-                  ),
-                ),
-                Row(
-                  children: [
-                    Text('${_index + 1}/${pages.length}'),
-                    const Spacer(),
-                    FilledButton(
-                      onPressed: _index == pages.length - 1
-                          ? _complete
-                          : () => _controller.nextPage(
-                              duration: const Duration(milliseconds: 220),
-                              curve: Curves.easeOut,
-                            ),
-                      child: Text(
-                        _index == pages.length - 1 ? 'Start' : 'Next',
-                      ),
+        decoration: _pageGradient(),
+        child: Theme(
+          data: AppTheme.dark(),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _complete,
+                      child: const Text('Skip'),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  Expanded(
+                    child: PageView(
+                      controller: _controller,
+                      onPageChanged: (index) => setState(() => _index = index),
+                      children: pages,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Text('${_index + 1}/${pages.length}'),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: _index == pages.length - 1
+                            ? _complete
+                            : () => _controller.nextPage(
+                                duration: const Duration(milliseconds: 220),
+                                curve: Curves.easeOut,
+                              ),
+                        child: Text(
+                          _index == pages.length - 1 ? 'Start' : 'Next',
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -833,7 +677,7 @@ class _OnboardingPage extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const _TunnelLogo(size: 92),
+        const BrandMark(size: 92),
         const SizedBox(height: 28),
         Icon(icon, size: 42, color: theme.colorScheme.primary),
         const SizedBox(height: 18),
@@ -849,4 +693,8 @@ class _OnboardingPage extends StatelessWidget {
       ],
     );
   }
+}
+
+String _ms(Duration? duration) {
+  return duration == null ? 'Unavailable' : '${duration.inMilliseconds} ms';
 }

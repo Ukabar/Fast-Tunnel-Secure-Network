@@ -19,7 +19,7 @@ class RemoteAdsConfigRepository {
 
   static String get _resolvedEndpoint {
     if (_overrideEndpoint.trim().isNotEmpty) return _overrideEndpoint.trim();
-    return defaultAdsConfigUrl;
+    return '';
   }
 
   final HttpClient _httpClient;

@@ -1,3 +1,9 @@
+// Future-only tunnel abstraction.
+//
+// This file is intentionally not wired into the current production navigation.
+// Version 1.0 uses user-triggered network diagnostics only and does not expose
+// simulated tunnel states in the normal app flow.
+
 import 'dart:async';
 import 'dart:math';
 

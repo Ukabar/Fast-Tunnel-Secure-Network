@@ -4,26 +4,19 @@ import 'package:go_router/go_router.dart';
 import '../features/history/presentation/history_screen.dart';
 import '../features/legal/presentation/about_screen.dart';
 import '../features/legal/presentation/legal_screen.dart';
-import '../features/locations/presentation/locations_screen.dart';
-import '../features/premium/presentation/planned_premium_screen.dart';
+import '../features/legal/presentation/methodology_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/tunnel/presentation/dashboard_screen.dart';
-import '../features/tunnel/presentation/mock_tunnel_debug_screen.dart';
-import '../features/tunnel/presentation/session_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     routes: [
       GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
-      GoRoute(
-        path: '/session',
-        builder: (context, state) => const SessionScreen(),
-      ),
-      GoRoute(
-        path: '/debug/mock-tunnel',
-        builder: (context, state) => const MockTunnelDebugScreen(),
-      ),
       GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
+      GoRoute(
+        path: '/methodology',
+        builder: (context, state) => const MethodologyScreen(),
+      ),
       GoRoute(
         path: '/history',
         builder: (context, state) => const HistoryScreen(),
@@ -35,16 +28,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
       GoRoute(
-        path: '/locations',
-        builder: (context, state) => const LocationsScreen(),
-      ),
-      GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/premium',
-        builder: (context, state) => const PlannedPremiumScreen(),
       ),
       GoRoute(
         path: '/privacy',

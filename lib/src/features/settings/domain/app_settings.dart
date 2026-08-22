@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../network_test/domain/network_test_models.dart';
+
 class AppSettings {
   const AppSettings({
     required this.themeMode,
     required this.onboardingCompleted,
     required this.notifyForPlannedPremium,
-    required this.connectionAnimationEnabled,
+    required this.testAccuracy,
     this.favoriteLocationIds = const [],
     this.preferredLocationId,
   });
@@ -13,7 +15,7 @@ class AppSettings {
   final ThemeMode themeMode;
   final bool onboardingCompleted;
   final bool notifyForPlannedPremium;
-  final bool connectionAnimationEnabled;
+  final NetworkTestAccuracy testAccuracy;
   final List<String> favoriteLocationIds;
   final String? preferredLocationId;
 
@@ -21,7 +23,7 @@ class AppSettings {
     themeMode: ThemeMode.system,
     onboardingCompleted: false,
     notifyForPlannedPremium: false,
-    connectionAnimationEnabled: true,
+    testAccuracy: NetworkTestAccuracy.accurate,
     favoriteLocationIds: ['us-nyc', 'gb-lon', 'sg-sin'],
   );
 
@@ -29,7 +31,7 @@ class AppSettings {
     ThemeMode? themeMode,
     bool? onboardingCompleted,
     bool? notifyForPlannedPremium,
-    bool? connectionAnimationEnabled,
+    NetworkTestAccuracy? testAccuracy,
     List<String>? favoriteLocationIds,
     String? preferredLocationId,
   }) {
@@ -38,8 +40,7 @@ class AppSettings {
       onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
       notifyForPlannedPremium:
           notifyForPlannedPremium ?? this.notifyForPlannedPremium,
-      connectionAnimationEnabled:
-          connectionAnimationEnabled ?? this.connectionAnimationEnabled,
+      testAccuracy: testAccuracy ?? this.testAccuracy,
       favoriteLocationIds: favoriteLocationIds ?? this.favoriteLocationIds,
       preferredLocationId: preferredLocationId ?? this.preferredLocationId,
     );
