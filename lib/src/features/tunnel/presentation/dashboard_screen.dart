@@ -13,7 +13,6 @@ import '../../network_test/application/network_test_providers.dart';
 import '../../network_test/domain/network_test_models.dart';
 import '../../settings/application/settings_providers.dart';
 import '../../settings/presentation/settings_screen.dart';
-import '../../vpn/presentation/vpn_coming_soon_card.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -157,8 +156,6 @@ class HomeScreen extends ConsumerWidget {
                   onOpen: () => context.push('/history/${latest.id}'),
                 ),
               ],
-              const SizedBox(height: 16),
-              const VpnComingSoonCard(),
             ],
           ),
         ),

@@ -6,11 +6,11 @@ import 'package:fast_tunnel_network_test/src/core/ads/controllers/interstitial_c
 import 'package:fast_tunnel_network_test/src/core/ads/providers/ad_providers.dart';
 import 'package:fast_tunnel_network_test/src/core/ads/widgets/adaptive_banner_ad_widget.dart';
 import 'package:fast_tunnel_network_test/src/features/legal/presentation/about_screen.dart';
+import 'package:fast_tunnel_network_test/src/features/legal/presentation/legal_screen.dart';
 import 'package:fast_tunnel_network_test/src/features/network_test/application/network_test_providers.dart';
 import 'package:fast_tunnel_network_test/src/features/network_test/data/network_test_service.dart';
 import 'package:fast_tunnel_network_test/src/features/settings/presentation/settings_screen.dart';
 import 'package:fast_tunnel_network_test/src/features/tunnel/application/tunnel_providers.dart';
-import 'package:fast_tunnel_network_test/src/features/vpn/presentation/vpn_coming_soon_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -84,30 +84,19 @@ void main() {
     expect(interstitial.completedTestIds.single, startsWith('NT-'));
   });
 
-  testWidgets('VPN preview is disabled and never reads the tunnel service', (
-    tester,
-  ) async {
+  testWidgets('home does not present VPN or security claims', (tester) async {
     await _pumpApp(tester);
 
-    expect(find.byKey(VpnComingSoonCard.cardKey), findsOneWidget);
-    expect(find.text('VPN'), findsOneWidget);
-    expect(find.text('Coming Soon'), findsNWidgets(2));
-    expect(
-      find.text(
-        'Fast and private VPN connectivity is planned for a future update.',
-      ),
-      findsOneWidget,
-    );
-
-    final buttonFinder = find.byKey(VpnComingSoonCard.buttonKey);
-    final button = tester.widget<FilledButton>(buttonFinder);
-    expect(button.onPressed, isNull);
-
-    await tester.ensureVisible(buttonFinder);
-    await tester.tap(buttonFinder, warnIfMissed: false);
-    await tester.pump();
-
-    expect(find.textContaining('Connected'), findsNothing);
+    for (final claim in [
+      'VPN',
+      'Secure Network',
+      'encrypted connection',
+      'hide your IP',
+      'anonymous browsing',
+      'private browsing',
+    ]) {
+      expect(find.textContaining(claim, findRichText: true), findsNothing);
+    }
     expect(tester.takeException(), isNull);
   });
 
@@ -129,13 +118,36 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: AboutScreen()));
     await tester.pump();
 
-    expect(find.text('Network testing utility'), findsOneWidget);
-    expect(find.textContaining('latency'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('VPN coming soon'), 250);
+    expect(find.text('Simple Network Sessions'), findsOneWidget);
+    expect(find.textContaining('network sessions'), findsOneWidget);
+    expect(find.textContaining('diagnostic tests'), findsOneWidget);
+    expect(find.textContaining('VPN'), findsNothing);
+    expect(find.textContaining('Secure Network'), findsNothing);
+  });
+
+  testWidgets('legal pages describe the current non-VPN functionality', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: LegalScreen(kind: LegalPageKind.privacy)),
+    );
+    await tester.pump();
+
+    expect(find.textContaining('not currently a VPN service'), findsOneWidget);
+    expect(find.textContaining('Google Mobile Ads'), findsOneWidget);
     expect(
-      find.text(
-        'VPN functionality is planned for a future update and is not available in the current version.',
-      ),
+      find.textContaining('does not change, hide, or mask'),
+      findsOneWidget,
+    );
+
+    await tester.pumpWidget(
+      const MaterialApp(home: LegalScreen(kind: LegalPageKind.terms)),
+    );
+    await tester.pump();
+
+    expect(find.textContaining('not currently a VPN service'), findsOneWidget);
+    expect(
+      find.textContaining('does not guarantee encryption'),
       findsOneWidget,
     );
   });

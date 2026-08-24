@@ -1,11 +1,11 @@
 # Fast Tunnel
 
-Fast Tunnel v1.0 is a Flutter network and internet testing utility. The store-facing functional positioning is **Fast Tunnel: Network Test**.
+Fast Tunnel v1.0 is a Flutter network and internet testing utility. The store-facing name is **Fast Tunnel** and the recommended subtitle is **Simple Network Sessions**.
 
 ## Current Release
 
 - Network/Internet Test: Available
-- VPN: Coming Soon / not implemented
+- Network sessions and selected locations: Available
 
 ## What Version 1.0 Does
 
@@ -30,7 +30,7 @@ Fast Tunnel v1.0 is a Flutter network and internet testing utility. The store-fa
 
 ## App Review Clarification
 
-The current version of Fast Tunnel does not implement VPN functionality. It performs user-triggered network diagnostics only. It does not establish a system-level VPN connection, route traffic through a VPN, or collect user traffic through VPN functionality.
+The current version of Fast Tunnel does not implement VPN functionality. It performs user-triggered network diagnostics and location/session organization only. It does not establish a system-level VPN connection, route traffic through a VPN, or collect user traffic through VPN functionality.
 
 ## Network Test Methodology
 
@@ -85,7 +85,7 @@ The Flutter code is feature-first under `lib/src`.
 - `features/settings`: persisted settings repository and screen.
 - `features/public_ip`: reusable public IP parsing support.
 - `features/legal`: About, Methodology, Privacy Policy, and Terms of Use.
-- `features/tunnel`: future-only tunnel abstractions retained for later native work, not used by the current production navigation.
+- `features/tunnel`: current dashboard, onboarding, network-test session flow, and session detail UI.
 
 ## Windows Setup
 

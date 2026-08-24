@@ -11,7 +11,7 @@ class AboutScreen extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fast Tunnel v1.0'),
+        title: const Text('Fast Tunnel'),
         leading: IconButton(
           tooltip: 'Back',
           icon: const Icon(Icons.arrow_back),
@@ -34,12 +34,12 @@ class AboutScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Network testing utility',
+                          'Simple Network Sessions',
                           style: theme.textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Fast Tunnel measures internet quality with user-triggered diagnostics. It checks public IP, latency, jitter, request failures, DNS, and HTTPS reachability.',
+                          'Fast Tunnel provides a simple interface for managing network sessions, diagnostic tests, and locations.',
                         ),
                       ],
                     ),
@@ -51,7 +51,7 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 24),
           const _InfoRow(
             icon: Icons.speed_outlined,
-            title: 'Real network metrics',
+            title: 'Network diagnostics',
             body:
                 'Results are calculated from HTTPS timing, DNS resolution, and reachability checks.',
           ),
@@ -66,12 +66,6 @@ class AboutScreen extends StatelessWidget {
             title: 'Local history',
             body:
                 'Completed test results and app preferences are stored locally on this device.',
-          ),
-          const _InfoRow(
-            icon: Icons.shield_outlined,
-            title: 'VPN coming soon',
-            body:
-                'VPN functionality is planned for a future update and is not available in the current version.',
           ),
         ],
       ),
