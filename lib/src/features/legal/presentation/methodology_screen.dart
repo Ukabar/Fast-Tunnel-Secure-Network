@@ -31,7 +31,7 @@ class MethodologyScreen extends StatelessWidget {
               icon: Icons.language_outlined,
               title: 'Reachability',
               body:
-                  'DNS resolution and HTTPS reachability are checked directly. The app does not route traffic, modify DNS, or change your public IP.',
+                  'DNS resolution and HTTPS reachability are checked directly. These read-only checks do not modify device network settings.',
             ),
           ],
         ),

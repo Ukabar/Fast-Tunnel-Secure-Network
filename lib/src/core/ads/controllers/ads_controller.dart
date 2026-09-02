@@ -16,6 +16,8 @@ class AdsState {
     required this.expiresAt,
     required this.fromCache,
     required this.sdkInitialized,
+    required this.adsCanBeRequested,
+    required this.privacyOptionsRequired,
     this.lastRefreshFailed = false,
   });
 
@@ -27,6 +29,8 @@ class AdsState {
       expiresAt: null,
       fromCache: false,
       sdkInitialized: false,
+      adsCanBeRequested: false,
+      privacyOptionsRequired: false,
     );
   }
 
@@ -36,6 +40,8 @@ class AdsState {
   final DateTime? expiresAt;
   final bool fromCache;
   final bool sdkInitialized;
+  final bool adsCanBeRequested;
+  final bool privacyOptionsRequired;
   final bool lastRefreshFailed;
 
   bool get effectiveTestMode => kDebugMode || config.testMode;
@@ -44,7 +50,11 @@ class AdsState {
       defaultTargetPlatform == TargetPlatform.android ||
       defaultTargetPlatform == TargetPlatform.iOS;
 
-  bool get adsEnabled => supportsAdsPlatform && config.anyAdsEnabled;
+  bool get adsEnabled =>
+      adsCanBeRequested &&
+      sdkInitialized &&
+      supportsAdsPlatform &&
+      config.anyAdsEnabled;
 
   String adUnitIdFor(AdFormat format) {
     return config.adUnitIdFor(format, effectiveTestMode: effectiveTestMode);
@@ -55,7 +65,10 @@ class AdsState {
         format == AdFormat.native) {
       return false;
     }
-    return supportsAdsPlatform && config.isFormatEnabled(format);
+    return adsCanBeRequested &&
+        sdkInitialized &&
+        supportsAdsPlatform &&
+        config.isFormatEnabled(format);
   }
 
   bool isBannerEnabledFor(String screenId) {
@@ -80,6 +93,8 @@ class AdsState {
     DateTime? expiresAt,
     bool? fromCache,
     bool? sdkInitialized,
+    bool? adsCanBeRequested,
+    bool? privacyOptionsRequired,
     bool? lastRefreshFailed,
   }) {
     return AdsState(
@@ -89,6 +104,9 @@ class AdsState {
       expiresAt: expiresAt ?? this.expiresAt,
       fromCache: fromCache ?? this.fromCache,
       sdkInitialized: sdkInitialized ?? this.sdkInitialized,
+      adsCanBeRequested: adsCanBeRequested ?? this.adsCanBeRequested,
+      privacyOptionsRequired:
+          privacyOptionsRequired ?? this.privacyOptionsRequired,
       lastRefreshFailed: lastRefreshFailed ?? this.lastRefreshFailed,
     );
   }
@@ -98,12 +116,26 @@ class AdsController extends AsyncNotifier<AdsState> {
   @override
   Future<AdsState> build() async {
     final repository = await ref.watch(adsConfigRepositoryProvider.future);
+    final privacy = await ref.watch(adsPrivacyServiceProvider).prepareForAds();
+    if (!privacy.canRequestAds) {
+      return AdsState.disabled().copyWith(
+        privacyOptionsRequired: privacy.privacyOptionsRequired,
+      );
+    }
     final initializer = ref.watch(mobileAdsInitializerProvider);
     final sdkInitialized = await initializer.initialize();
     final cached = await repository.loadCached();
     final initial = cached == null
-        ? AdsState.disabled().copyWith(sdkInitialized: sdkInitialized)
-        : _fromSnapshot(cached, sdkInitialized: sdkInitialized);
+        ? AdsState.disabled().copyWith(
+            sdkInitialized: sdkInitialized,
+            adsCanBeRequested: true,
+            privacyOptionsRequired: privacy.privacyOptionsRequired,
+          )
+        : _fromSnapshot(
+            cached,
+            sdkInitialized: sdkInitialized,
+            privacyOptionsRequired: privacy.privacyOptionsRequired,
+          );
     unawaited(refreshRemote());
     return initial;
   }
@@ -113,11 +145,20 @@ class AdsController extends AsyncNotifier<AdsState> {
       final repository = await ref.read(adsConfigRepositoryProvider.future);
       final result = await repository.fetchRemoteWithJson();
       await repository.save(result.snapshot, result.rawJson);
+      final current = state.maybeWhen(
+        data: (value) => value,
+        orElse: AdsState.disabled,
+      );
+      if (!current.adsCanBeRequested) return;
       final sdkInitialized = await ref
           .read(mobileAdsInitializerProvider)
           .initialize();
       state = AsyncData(
-        _fromSnapshot(result.snapshot, sdkInitialized: sdkInitialized),
+        _fromSnapshot(
+          result.snapshot,
+          sdkInitialized: sdkInitialized,
+          privacyOptionsRequired: current.privacyOptionsRequired,
+        ),
       );
     } catch (_) {
       final current = state.maybeWhen(
@@ -131,6 +172,7 @@ class AdsController extends AsyncNotifier<AdsState> {
   AdsState _fromSnapshot(
     AdsConfigSnapshot snapshot, {
     required bool sdkInitialized,
+    required bool privacyOptionsRequired,
   }) {
     return AdsState(
       config: snapshot.config,
@@ -139,6 +181,8 @@ class AdsController extends AsyncNotifier<AdsState> {
       expiresAt: snapshot.expiresAt,
       fromCache: snapshot.fromCache,
       sdkInitialized: sdkInitialized,
+      adsCanBeRequested: true,
+      privacyOptionsRequired: privacyOptionsRequired,
     );
   }
 }

@@ -6,7 +6,7 @@ import '../features/legal/presentation/about_screen.dart';
 import '../features/legal/presentation/legal_screen.dart';
 import '../features/legal/presentation/methodology_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
-import '../features/tunnel/presentation/dashboard_screen.dart';
+import '../features/network_test/presentation/dashboard_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(

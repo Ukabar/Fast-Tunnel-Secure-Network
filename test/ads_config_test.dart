@@ -18,7 +18,10 @@ void main() {
       expect(config.adsEnabled, isTrue);
       expect(config.admob.enabled, isTrue);
       expect(config.banner.enabled, isTrue);
-      expect(config.banner.screens, contains(AdScreenIds.locations));
+      expect(config.banner.screens, {
+        AdScreenIds.history,
+        AdScreenIds.settings,
+      });
       expect(config.interstitial.showEveryCompletedSessions, 4);
     });
 
@@ -91,7 +94,7 @@ void main() {
 
       final config = RemoteAdsConfig.fromJson(json);
 
-      expect(config.banner.screens, {AdScreenIds.locations});
+      expect(config.banner.screens, isEmpty);
     });
 
     test('global kill switch disables all formats', () {

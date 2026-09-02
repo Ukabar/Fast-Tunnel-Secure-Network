@@ -1,5 +1,7 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../utils/privacy_preserving_ad_request.dart';
+
 class BannerAdService {
   const BannerAdService();
 
@@ -15,7 +17,7 @@ class BannerAdService {
     return BannerAd(
       adUnitId: adUnitId,
       size: size,
-      request: const AdRequest(),
+      request: privacyPreservingAdRequest(),
       listener: listener,
     );
   }

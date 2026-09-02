@@ -34,12 +34,12 @@ class AboutScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Simple Network Sessions',
+                          'Internet & Network Test',
                           style: theme.textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Fast Tunnel provides a simple interface for managing network sessions, diagnostic tests, and locations.',
+                          'Fast Tunnel measures network quality with on-demand diagnostic checks and keeps completed results on this device.',
                         ),
                       ],
                     ),

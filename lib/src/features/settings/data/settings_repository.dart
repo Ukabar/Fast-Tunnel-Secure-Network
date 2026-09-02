@@ -15,10 +15,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
 
   static const themeModeKey = 'settings_theme_mode';
   static const onboardingCompletedKey = 'settings_onboarding_completed';
-  static const notifyPremiumKey = 'settings_notify_premium';
   static const testAccuracyKey = 'settings_test_accuracy';
-  static const preferredLocationKey = 'settings_preferred_location';
-  static const favoriteLocationIdsKey = 'settings_favorite_locations';
 
   final SharedPreferences _preferences;
 
@@ -28,12 +25,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       themeMode: _themeModeFromName(_preferences.getString(themeModeKey)),
       onboardingCompleted:
           _preferences.getBool(onboardingCompletedKey) ?? false,
-      notifyForPlannedPremium: _preferences.getBool(notifyPremiumKey) ?? false,
       testAccuracy: _accuracyFromName(_preferences.getString(testAccuracyKey)),
-      preferredLocationId: _preferences.getString(preferredLocationKey),
-      favoriteLocationIds:
-          _preferences.getStringList(favoriteLocationIdsKey) ??
-          AppSettings.defaults.favoriteLocationIds,
     );
   }
 
@@ -44,21 +36,7 @@ class SharedPreferencesSettingsRepository implements SettingsRepository {
       onboardingCompletedKey,
       settings.onboardingCompleted,
     );
-    await _preferences.setBool(
-      notifyPremiumKey,
-      settings.notifyForPlannedPremium,
-    );
     await _preferences.setString(testAccuracyKey, settings.testAccuracy.name);
-    final preferred = settings.preferredLocationId;
-    if (preferred == null) {
-      await _preferences.remove(preferredLocationKey);
-    } else {
-      await _preferences.setString(preferredLocationKey, preferred);
-    }
-    await _preferences.setStringList(
-      favoriteLocationIdsKey,
-      settings.favoriteLocationIds,
-    );
   }
 
   ThemeMode _themeModeFromName(String? name) {

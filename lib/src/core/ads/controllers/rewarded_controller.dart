@@ -3,8 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import '../../../features/tunnel/application/tunnel_providers.dart';
-import '../../../features/tunnel/domain/tunnel_service.dart';
+import '../../../features/network_test/application/network_test_providers.dart';
 import '../models/remote_ads_config.dart';
 import '../providers/ad_providers.dart';
 
@@ -17,11 +16,10 @@ class RewardedController extends Notifier<void> {
         .read(adsControllerProvider)
         .maybeWhen(data: (value) => value, orElse: () => null);
     if (ads == null || !ads.isFormatEnabled(AdFormat.rewarded)) return false;
-    final tunnel = ref.read(tunnelServiceProvider).current;
-    if (tunnel.status == TunnelStatus.connected ||
-        tunnel.status == TunnelStatus.preparing ||
-        tunnel.status == TunnelStatus.connecting ||
-        tunnel.status == TunnelStatus.disconnecting) {
+    final testIsRunning = ref
+        .read(networkTestControllerProvider)
+        .maybeWhen(data: (value) => value.isRunning, orElse: () => false);
+    if (testIsRunning) {
       return false;
     }
     final coordinator = ref.read(fullScreenAdCoordinatorProvider);

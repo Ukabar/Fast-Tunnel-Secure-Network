@@ -1,5 +1,7 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../utils/privacy_preserving_ad_request.dart';
+
 class NativeAdService {
   const NativeAdService();
 
@@ -12,7 +14,7 @@ class NativeAdService {
     return NativeAd(
       adUnitId: adUnitId,
       factoryId: factoryId,
-      request: const AdRequest(),
+      request: privacyPreservingAdRequest(),
       listener: listener,
     );
   }

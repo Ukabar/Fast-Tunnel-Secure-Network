@@ -10,7 +10,6 @@ import 'package:fast_tunnel_network_test/src/features/legal/presentation/legal_s
 import 'package:fast_tunnel_network_test/src/features/network_test/application/network_test_providers.dart';
 import 'package:fast_tunnel_network_test/src/features/network_test/data/network_test_service.dart';
 import 'package:fast_tunnel_network_test/src/features/settings/presentation/settings_screen.dart';
-import 'package:fast_tunnel_network_test/src/features/tunnel/application/tunnel_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -118,14 +117,13 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: AboutScreen()));
     await tester.pump();
 
-    expect(find.text('Simple Network Sessions'), findsOneWidget);
-    expect(find.textContaining('network sessions'), findsOneWidget);
-    expect(find.textContaining('diagnostic tests'), findsOneWidget);
+    expect(find.text('Internet & Network Test'), findsOneWidget);
+    expect(find.textContaining('on-demand diagnostic checks'), findsOneWidget);
     expect(find.textContaining('VPN'), findsNothing);
     expect(find.textContaining('Secure Network'), findsNothing);
   });
 
-  testWidgets('legal pages describe the current non-VPN functionality', (
+  testWidgets('legal pages describe the current diagnostic functionality', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -133,21 +131,21 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.textContaining('not currently a VPN service'), findsOneWidget);
+    expect(find.textContaining('on-demand diagnostics'), findsOneWidget);
     expect(find.textContaining('Google Mobile Ads'), findsOneWidget);
-    expect(
-      find.textContaining('does not change, hide, or mask'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('read-only lookup'), findsOneWidget);
 
     await tester.pumpWidget(
       const MaterialApp(home: LegalScreen(kind: LegalPageKind.terms)),
     );
     await tester.pump();
 
-    expect(find.textContaining('not currently a VPN service'), findsOneWidget);
     expect(
-      find.textContaining('does not guarantee encryption'),
+      find.textContaining('user-triggered network diagnostics'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('does not alter device network settings'),
       findsOneWidget,
     );
   });
@@ -257,11 +255,6 @@ Future<void> _pumpApp(
         adsControllerProvider.overrideWith(_DisabledAdsController.new),
         interstitialControllerProvider.overrideWith(
           () => interstitialController,
-        ),
-        tunnelServiceProvider.overrideWith(
-          (ref) => throw StateError(
-            'The production network-test UI must not read TunnelService.',
-          ),
         ),
         networkTestServiceProvider.overrideWithValue(
           NetworkTestService(

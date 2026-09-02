@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/ads/utils/ad_screen_ids.dart';
 import '../../../core/ads/widgets/adaptive_banner_ad_widget.dart';
+import '../../../core/ads/providers/ad_providers.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../history/application/history_providers.dart';
 import '../../network_test/domain/network_test_models.dart';
@@ -15,6 +16,12 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsControllerProvider);
+    final privacyOptionsRequired = ref
+        .watch(adsControllerProvider)
+        .maybeWhen(
+          data: (ads) => ads.privacyOptionsRequired,
+          orElse: () => false,
+        );
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -101,6 +108,34 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
+                if (privacyOptionsRequired) ...[
+                  const SectionHeader(title: 'Privacy'),
+                  _SettingsPanel(
+                    padding: EdgeInsets.zero,
+                    child: _SettingsLink(
+                      icon: Icons.privacy_tip_outlined,
+                      label: 'Privacy choices',
+                      onTap: () async {
+                        try {
+                          await ref
+                              .read(adsPrivacyServiceProvider)
+                              .showPrivacyOptions();
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Privacy choices are temporarily unavailable.',
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
                 const SectionHeader(title: 'About'),
                 _SettingsPanel(
                   padding: EdgeInsets.zero,

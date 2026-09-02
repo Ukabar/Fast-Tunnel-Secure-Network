@@ -44,9 +44,7 @@ Privacy Policy for Fast Tunnel
 
 Last Updated: August 2026
 
-Fast Tunnel provides a simple interface for managing network sessions, diagnostic tests, and locations. This Privacy Policy explains how information may be handled when you use the app.
-
-Fast Tunnel is not currently a VPN service. It does not claim to encrypt, reroute, protect, mask, or anonymize your internet traffic.
+Fast Tunnel is an internet and network testing utility. This Privacy Policy explains how information may be handled when you use its on-demand diagnostics.
 
 Network Diagnostics
 
@@ -54,15 +52,17 @@ When you start a test, the app may contact lightweight HTTPS endpoints to measur
 
 Public IP Lookup
 
-The app may request your current public IP address from a third-party endpoint, such as api.ipify.org, and display it as an informational diagnostic value. This lookup does not change, hide, or mask your IP address.
+The app may request your current public IP address from a third-party endpoint, such as api.ipify.org, and display it as an informational diagnostic value. This is a read-only lookup and does not modify device network settings.
 
 Local Data
 
-Fast Tunnel may store completed test history, favorite locations, appearance settings, test accuracy settings, onboarding status, and advertising display counters locally on your device using local app storage.
+Fast Tunnel may store completed test history, appearance settings, test accuracy settings, onboarding status, and advertising display counters locally on your device using local app storage.
 
 Advertising
 
-Fast Tunnel includes Google Mobile Ads. When advertising is enabled, Google and its advertising partners may process device, advertising, and interaction information according to their own privacy policies, consent requirements, and applicable law. Fast Tunnel also uses a remote advertising configuration to control ad placement and availability.
+Fast Tunnel includes Google Mobile Ads and Google's User Messaging Platform. Advertising is not requested until the applicable privacy flow has completed and Google reports that ads can be requested. On iOS, Fast Tunnel requests non-personalized ads, disables Google's publisher first-party identifier and ad personalization, does not request App Tracking Transparency permission, and does not access the IDFA.
+
+Google and its advertising partners may still process information needed to deliver and measure non-personalized or limited ads, including IP-derived approximate location, app- or SDK-scoped identifiers, ads viewed, ad interactions, performance information, and fraud-prevention signals. This information is subject to Google's privacy terms and the choices presented through Google's consent flow.
 
 No Accounts
 
@@ -74,7 +74,7 @@ The current app uses internet access for network diagnostics, public IP lookup, 
 
 Your Choices
 
-You can clear locally stored test history from the app settings. You can also remove locally stored app data by deleting the app from your device. Advertising choices may be available through your device settings, Google settings, or regional consent prompts.
+You can clear locally stored test history from the app settings. You can also remove locally stored app data by deleting the app from your device. When required for your region, the Settings screen provides a Privacy choices entry for reviewing or changing advertising choices.
 
 Changes
 
@@ -90,15 +90,11 @@ Terms of Use for Fast Tunnel
 
 Last Updated: August 2026
 
-Fast Tunnel provides its currently implemented network session, location, and diagnostic functionality. By using the app, you agree to use it lawfully and responsibly.
+Fast Tunnel provides user-triggered internet and network diagnostic functionality. By using the app, you agree to use it lawfully and responsibly.
 
 Current Functionality
 
-Fast Tunnel can run user-triggered network diagnostics, display diagnostic results, show selected locations, save favorite locations, and store completed test history locally on your device.
-
-No VPN Service
-
-Fast Tunnel is not currently a VPN service. It does not guarantee encryption, anonymity, IP masking, traffic protection, or rerouting of all device traffic. Displayed locations must be understood as app locations or session selections, not VPN servers, unless a future version clearly implements and describes server-based functionality.
+Fast Tunnel can run user-triggered network diagnostics, display measured results and the current public IP returned by a lookup service, and store completed test history locally on your device. These diagnostic checks are read-only and the app does not alter device network settings.
 
 Diagnostic Results
 
@@ -110,7 +106,7 @@ The app may use third-party services for advertising, diagnostic endpoints, publ
 
 Availability and Changes
 
-Fast Tunnel is provided subject to reasonable availability limitations. Features, locations, diagnostics, advertising behavior, and app availability may change in future versions.
+Fast Tunnel is provided subject to reasonable availability limitations. Diagnostics, advertising behavior, and app availability may change in future versions.
 
 Acceptable Use
 

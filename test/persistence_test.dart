@@ -36,10 +36,7 @@ void main() {
       const AppSettings(
         themeMode: ThemeMode.light,
         onboardingCompleted: true,
-        notifyForPlannedPremium: false,
         testAccuracy: NetworkTestAccuracy.maximum,
-        preferredLocationId: 'legacy-id',
-        favoriteLocationIds: ['legacy-id'],
       ),
     );
 
@@ -47,8 +44,6 @@ void main() {
     expect(settings.themeMode, ThemeMode.light);
     expect(settings.onboardingCompleted, isTrue);
     expect(settings.testAccuracy, NetworkTestAccuracy.maximum);
-    expect(settings.preferredLocationId, 'legacy-id');
-    expect(settings.favoriteLocationIds, ['legacy-id']);
   });
 
   test('corrupted test history data is ignored without crashing', () async {

@@ -10,6 +10,7 @@ import '../controllers/rewarded_controller.dart';
 import '../data/ads_config_repository.dart';
 import '../data/embedded_ads_config_repository.dart';
 import '../services/app_open_ad_service.dart';
+import '../services/ads_privacy_service.dart';
 import '../services/banner_ad_service.dart';
 import '../services/interstitial_ad_service.dart';
 import '../services/mobile_ads_initializer.dart';
@@ -24,6 +25,10 @@ final sharedPreferencesForAdsProvider = FutureProvider<SharedPreferences>((
 
 final mobileAdsInitializerProvider = Provider<MobileAdsInitializer>((ref) {
   return MobileAdsInitializer();
+});
+
+final adsPrivacyServiceProvider = Provider<AdsPrivacyService>((ref) {
+  return UmpAdsPrivacyService();
 });
 
 final adsConfigRepositoryProvider = FutureProvider<AdsConfigRepository>((

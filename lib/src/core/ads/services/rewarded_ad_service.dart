@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../utils/privacy_preserving_ad_request.dart';
+
 class RewardedAdService {
   const RewardedAdService();
 
@@ -9,7 +11,7 @@ class RewardedAdService {
     final completer = Completer<RewardedAd>();
     RewardedAd.load(
       adUnitId: adUnitId,
-      request: const AdRequest(),
+      request: privacyPreservingAdRequest(),
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: completer.complete,
         onAdFailedToLoad: completer.completeError,

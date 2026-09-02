@@ -1,11 +1,11 @@
 # Fast Tunnel
 
-Fast Tunnel v1.0 is a Flutter network and internet testing utility. The store-facing name is **Fast Tunnel** and the recommended subtitle is **Simple Network Sessions**.
+Fast Tunnel v1.0 is a Flutter internet and network testing utility. The user-facing and store-facing name is **Fast Tunnel**. A suitable store subtitle is **Internet & Network Test**.
 
 ## Current Release
 
-- Network/Internet Test: Available
-- Network sessions and selected locations: Available
+- Internet and network diagnostics: Available
+- Local test history: Available
 
 ## What Version 1.0 Does
 
@@ -18,19 +18,9 @@ Fast Tunnel v1.0 is a Flutter network and internet testing utility. The store-fa
 - Stores completed test history locally on the device, capped at 50 records.
 - Supports Google Mobile Ads with embedded in-app configuration.
 
-## What Version 1.0 Does Not Do
+## Product Boundary
 
-- It does not provide VPN functionality.
-- It does not establish a system-level VPN connection.
-- It does not route device traffic through a VPN, proxy, or traffic tunnel.
-- It does not modify DNS settings.
-- It does not change the public IP.
-- It does not inspect, intercept, or collect user traffic through VPN functionality.
-- It does not request VPN entitlements, NetworkExtension capabilities, or packet tunnel targets.
-
-## App Review Clarification
-
-The current version of Fast Tunnel does not implement VPN functionality. It performs user-triggered network diagnostics and location/session organization only. It does not establish a system-level VPN connection, route traffic through a VPN, or collect user traffic through VPN functionality.
+Version 1.0 only performs user-triggered, read-only diagnostics. It does not modify device network settings, DNS configuration, public IP, or the handling of other app traffic. The iOS target contains no special networking capability or extension.
 
 ## Network Test Methodology
 
@@ -85,7 +75,7 @@ The Flutter code is feature-first under `lib/src`.
 - `features/settings`: persisted settings repository and screen.
 - `features/public_ip`: reusable public IP parsing support.
 - `features/legal`: About, Methodology, Privacy Policy, and Terms of Use.
-- `features/tunnel`: current dashboard, onboarding, network-test session flow, and session detail UI.
+- `features/network_test`: dashboard, onboarding, diagnostic service, result models, and controller.
 
 ## Windows Setup
 
@@ -149,6 +139,15 @@ iOS ads are enabled directly inside the app through embedded AdMob configuration
 
 Native and rewarded ads are configured but disabled in version 1.0.
 
+On iOS, advertising uses a privacy-preserving configuration:
+
+- Google UMP refreshes consent information on every launch.
+- Ads are not initialized or requested until UMP reports that ads can be requested.
+- All iOS ad requests are non-personalized.
+- Google publisher first-party ID and publisher ad personalization are disabled.
+- The app does not request ATT authorization and does not access IDFA.
+- A Privacy choices entry appears in Settings when UMP requires it.
+
 Android currently uses official Google test ads because Android production AdMob IDs have not been provided. Do not publish Android with test ad identifiers.
 
 Interstitial ads must not be shown while a network test is running or while results are being calculated.
@@ -169,14 +168,4 @@ Windows cannot verify an iOS archive locally. Use Codemagic for iOS archive and 
 
 ## iOS Capability Audit
 
-Version 1.0 intentionally avoids:
-
-- NetworkExtension framework usage for VPN
-- `NEVPNManager`
-- `NEPacketTunnelProvider`
-- Packet Tunnel Provider targets
-- Personal VPN entitlement
-- Network Extension entitlement
-- proxy routing
-- DNS modification
-- traffic tunneling
+The Runner target has no entitlements file, additional app-extension target, or special networking capability. It uses ordinary HTTPS requests for diagnostics, public IP lookup, consent, and advertising.

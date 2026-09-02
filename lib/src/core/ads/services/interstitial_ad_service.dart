@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../utils/privacy_preserving_ad_request.dart';
+
 class InterstitialAdService {
   const InterstitialAdService();
 
@@ -9,7 +11,7 @@ class InterstitialAdService {
     final completer = Completer<InterstitialAd>();
     InterstitialAd.load(
       adUnitId: adUnitId,
-      request: const AdRequest(),
+      request: privacyPreservingAdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: completer.complete,
         onAdFailedToLoad: completer.completeError,

@@ -9,8 +9,8 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/widgets/app_components.dart';
 import '../../history/application/history_providers.dart';
 import '../../history/presentation/history_screen.dart';
-import '../../network_test/application/network_test_providers.dart';
-import '../../network_test/domain/network_test_models.dart';
+import '../application/network_test_providers.dart';
+import '../domain/network_test_models.dart';
 import '../../settings/application/settings_providers.dart';
 import '../../settings/presentation/settings_screen.dart';
 
@@ -359,7 +359,7 @@ class _TestCard extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            running ? Icons.close_rounded : Icons.bolt_rounded,
+                            running ? Icons.close_rounded : Icons.speed_rounded,
                             color: Colors.white,
                             size: 42,
                           ),

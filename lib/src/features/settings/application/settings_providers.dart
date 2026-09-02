@@ -33,25 +33,6 @@ class SettingsController extends AsyncNotifier<AppSettings> {
     await _update((settings) => settings.copyWith(onboardingCompleted: true));
   }
 
-  Future<void> setPreferredLocation(String id) async {
-    await _update((settings) => settings.copyWith(preferredLocationId: id));
-  }
-
-  Future<void> toggleFavoriteLocation(String id) async {
-    await _update((settings) {
-      final favorites = settings.favoriteLocationIds.contains(id)
-          ? settings.favoriteLocationIds.where((item) => item != id).toList()
-          : [id, ...settings.favoriteLocationIds].take(100).toList();
-      return settings.copyWith(favoriteLocationIds: favorites);
-    });
-  }
-
-  Future<void> setNotifyForPlannedPremium(bool value) async {
-    await _update(
-      (settings) => settings.copyWith(notifyForPlannedPremium: value),
-    );
-  }
-
   Future<void> setTestAccuracy(NetworkTestAccuracy accuracy) async {
     await _update((settings) => settings.copyWith(testAccuracy: accuracy));
   }

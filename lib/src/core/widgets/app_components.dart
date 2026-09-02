@@ -24,10 +24,10 @@ class BrandMark extends StatelessWidget {
         ],
       ),
       child: Icon(
-        Icons.bolt_rounded,
+        Icons.speed_rounded,
         size: size * 0.5,
         color: Colors.white,
-        semanticLabel: 'Fast Tunnel',
+        semanticLabel: 'Fast Tunnel network test',
       ),
     );
   }
